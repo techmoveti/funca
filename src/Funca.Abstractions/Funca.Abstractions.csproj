@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <Title>funca abstractions</Title>
+        <Authors>https://www.techmove.com.br/</Authors>
+        <Description>light and flavorful abstractions</Description>
+        <PackageProjectUrl>https://github.com/techmoveti/funca</PackageProjectUrl>
+        <PackageIcon>techmove-icon.png</PackageIcon>
+        <RepositoryUrl>https://github.com/techmoveti/funca</RepositoryUrl>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <None Update="techmove-icon.png">
+        <Pack>True</Pack>
+        <PackagePath></PackagePath>
+      </None>
+    </ItemGroup>
+
+</Project>
