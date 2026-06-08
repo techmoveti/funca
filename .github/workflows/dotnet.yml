@@ -1,17 +1,14 @@
-# This workflow will build a .NET project
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
-
 name: .NET
 
 on:
   push:
     branches: [ "main" ]
+    tags: [ "v*" ]  # Publicar quando criar uma tag
   pull_request:
     branches: [ "main" ]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -26,3 +23,14 @@ jobs:
       run: dotnet build src/Funca.slnx --no-restore
     - name: Test
       run: dotnet test src/Funca.slnx --no-build --verbosity normal
+    
+    - name: Pack NuGet
+      if: startsWith(github.ref, 'refs/tags/')
+      run: dotnet pack src/Funca.slnx --configuration Release
+    
+    - name: Push to NuGet
+      if: startsWith(github.ref, 'refs/tags/')
+      run: dotnet nuget push "**/*.nupkg" 
+        --api-key ${{ secrets.NUGET_API_KEY }} 
+        --source https://api.nuget.org/v3/index.json
+        --skip-duplicate
