@@ -10,6 +10,8 @@ public static partial class Result
 
         public Result<T> Tee(Action<T> action)
         {
+            ArgumentNullException.ThrowIfNull(action);
+
             if (@this.IsError)
                 return @this;
 
@@ -20,6 +22,8 @@ public static partial class Result
 
         public async Task<Result<T>> Tee(Func<T, Task> action)
         {
+            ArgumentNullException.ThrowIfNull(action);
+
             if (@this.IsError)
                 return @this;
 
@@ -30,6 +34,8 @@ public static partial class Result
 
         public async ValueTask<Result<T>> Tee(Func<T, ValueTask> action)
         {
+            ArgumentNullException.ThrowIfNull(action);
+
             if (@this.IsError)
                 return @this;
 
@@ -44,6 +50,8 @@ public static partial class Result
 
         public Task<Result<T>> TeeFromResult(Action<T> action)
         {
+            ArgumentNullException.ThrowIfNull(action);
+
             if (@this.IsError)
                 return Task.FromResult(@this);
 
@@ -54,6 +62,8 @@ public static partial class Result
 
         public ValueTask<Result<T>> TeeFromValueTask(Action<T> action)
         {
+            ArgumentNullException.ThrowIfNull(action);
+
             if (@this.IsError)
                 return ValueTask.FromResult(@this);
 
@@ -71,6 +81,9 @@ public static partial class Result
 
         public async Task<Result<T>> Tee(Action<T> action)
         {
+            ArgumentNullException.ThrowIfNull(@this);
+            ArgumentNullException.ThrowIfNull(action);
+
             var result = await @this;
 
             if (result.IsError)
@@ -87,6 +100,9 @@ public static partial class Result
 
         public async Task<Result<T>> Tee(Func<T, Task> action)
         {
+            ArgumentNullException.ThrowIfNull(@this);
+            ArgumentNullException.ThrowIfNull(action);
+
             var result = await @this;
 
             if (result.IsError)
@@ -103,6 +119,9 @@ public static partial class Result
 
         public async ValueTask<Result<T>> Tee(Func<T, ValueTask> action)
         {
+            ArgumentNullException.ThrowIfNull(@this);
+            ArgumentNullException.ThrowIfNull(action);
+
             var result = await @this;
 
             if (result.IsError)
@@ -122,6 +141,8 @@ public static partial class Result
 
         public async ValueTask<Result<T>> Tee(Action<T> action)
         {
+            ArgumentNullException.ThrowIfNull(action);
+
             var result = await @this;
 
             if (result.IsError)
@@ -138,6 +159,8 @@ public static partial class Result
 
         public async ValueTask<Result<T>> Tee(Func<T, Task> action)
         {
+            ArgumentNullException.ThrowIfNull(action);
+
             var result = await @this;
 
             if (result.IsError)
@@ -154,6 +177,8 @@ public static partial class Result
 
         public async ValueTask<Result<T>> Tee(Func<T, ValueTask> action)
         {
+            ArgumentNullException.ThrowIfNull(action);
+
             var result = await @this;
 
             if (result.IsError)
@@ -175,6 +200,9 @@ public static partial class Result
             Action<TValue> onSuccess,
             Action<ErrorResult[]> onFailure)
         {
+            ArgumentNullException.ThrowIfNull(onSuccess);
+            ArgumentNullException.ThrowIfNull(onFailure);
+
             if (@this.IsOk)
                 onSuccess(@this.Unwrap());
             else
@@ -185,6 +213,9 @@ public static partial class Result
             Func<TValue, Task> onSuccess,
             Func<ErrorResult[], Task> onFailure)
         {
+            ArgumentNullException.ThrowIfNull(onSuccess);
+            ArgumentNullException.ThrowIfNull(onFailure);
+
             if (@this.IsOk)
                 await onSuccess(@this.Unwrap());
             else
@@ -195,6 +226,9 @@ public static partial class Result
             Func<TValue, ValueTask> onSuccess,
             Func<ErrorResult[], ValueTask> onFailure)
         {
+            ArgumentNullException.ThrowIfNull(onSuccess);
+            ArgumentNullException.ThrowIfNull(onFailure);
+
             if (@this.IsOk)
                 await onSuccess(@this.Unwrap());
             else
@@ -208,6 +242,10 @@ public static partial class Result
             Action<TValue> onSuccess,
             Action<ErrorResult[]> onFailure)
         {
+            ArgumentNullException.ThrowIfNull(@this);
+            ArgumentNullException.ThrowIfNull(onSuccess);
+            ArgumentNullException.ThrowIfNull(onFailure);
+
             var result = await @this;
 
             if (result.IsOk)
@@ -220,6 +258,10 @@ public static partial class Result
             Func<TValue, Task> onSuccess,
             Func<ErrorResult[], Task> onFailure)
         {
+            ArgumentNullException.ThrowIfNull(@this);
+            ArgumentNullException.ThrowIfNull(onSuccess);
+            ArgumentNullException.ThrowIfNull(onFailure);
+
             var result = await @this;
 
             if (result.IsOk)
@@ -232,6 +274,10 @@ public static partial class Result
             Func<TValue, ValueTask> onSuccess,
             Func<ErrorResult[], ValueTask> onFailure)
         {
+            ArgumentNullException.ThrowIfNull(@this);
+            ArgumentNullException.ThrowIfNull(onSuccess);
+            ArgumentNullException.ThrowIfNull(onFailure);
+
             var result = await @this;
 
             if (result.IsOk)
@@ -247,6 +293,9 @@ public static partial class Result
             Action<TValue> onSuccess,
             Action<ErrorResult[]> onFailure)
         {
+            ArgumentNullException.ThrowIfNull(onSuccess);
+            ArgumentNullException.ThrowIfNull(onFailure);
+
             var result = await @this;
 
             if (result.IsOk)
@@ -259,6 +308,9 @@ public static partial class Result
             Func<TValue, Task> onSuccess,
             Func<ErrorResult[], Task> onFailure)
         {
+            ArgumentNullException.ThrowIfNull(onSuccess);
+            ArgumentNullException.ThrowIfNull(onFailure);
+
             var result = await @this;
 
             if (result.IsOk)
@@ -271,6 +323,9 @@ public static partial class Result
             Func<TValue, ValueTask> onSuccess,
             Func<ErrorResult[], ValueTask> onFailure)
         {
+            ArgumentNullException.ThrowIfNull(onSuccess);
+            ArgumentNullException.ThrowIfNull(onFailure);
+
             var result = await @this;
 
             if (result.IsOk)

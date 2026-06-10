@@ -1,17 +1,42 @@
 ﻿namespace Funca.Abstractions.Containers;
 
-public readonly record struct Result<T>(
-    T? Value,
-    ErrorResult[] Errors)
+public readonly record struct Result<T>
 {
-    public bool IsOk { get; } = Value is not null;
-    public bool IsError { get; } = Value is null;
+    public T? Value { get; init; }
 
-    public static Result<T> Wrap(T? value) => new(value, []);
+    public ErrorResult[] Errors => field ?? Array.Empty<ErrorResult>();
 
-    public T Unwrap() => Value ?? throw new ArgumentNullException(nameof(Value));
+    public bool IsOk => Errors.Length == 0 && Value is not null;
 
-    public static implicit operator Result<T>(ErrorResult error) => new(default, [error]);
+    public bool IsError => !IsOk;
 
-    public static implicit operator Result<T>(ErrorResult[] errors) => new(default, errors);
+    public bool HasErrors => Errors.Length > 0;
+
+    private Result(T? value, ErrorResult[]? errors)
+    {
+        Value = value;
+        Errors = errors;
+    }
+
+    public static Result<T> Wrap(T? value) => new(value, Array.Empty<ErrorResult>());
+
+    public static Result<T> Error(ErrorResult error) => new(default, [error]);
+
+    public static Result<T> Error(ErrorResult[] errors) => new(default, errors ?? Array.Empty<ErrorResult>());
+
+    public T Unwrap()
+        => !IsOk ? throw new InvalidOperationException("Result does not contain a success value.") : Value!;
+
+    public T UnwrapOr(T fallback) => IsOk ? Value! : fallback;
+
+    public T? UnwrapOrDefault() => IsOk ? Value : default;
+
+    public override string ToString()
+        => IsOk
+            ? $"Ok({Value})"
+            : $"Error[{string.Join(", ", Errors)}]";
+
+    public static implicit operator Result<T>(ErrorResult error) => Error(error);
+
+    public static implicit operator Result<T>(ErrorResult[] errors) => Error(errors);
 }

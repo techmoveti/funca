@@ -4,6 +4,8 @@ namespace Funca.Abstractions.Containers;
 
 public static partial class Option
 {
+    public static Option<TResult> From<TResult>(TResult? value) => value is null ? None<TResult>() : Some(value);
+
     public static Option<T> Some<T>(T value) => value is null
         ? throw new ArgumentNullException(nameof(value))
         : Option<T>.Some(value);
@@ -19,48 +21,69 @@ public static partial class Option
         public Result<T> ToResult() =>
             @this.ToResult(ErrorResult.Empty);
 
-        public Result<T> ToResult(ErrorResult error) =>
-            @this.IsNone
+        public Result<T> ToResult(ErrorResult error)
+        {
+            ArgumentNullException.ThrowIfNull(error);
+
+            return @this.IsNone
                 ? Error<T>(error)
                 : Ok(@this.Value!);
+        }
 
         public Result<T> ToResult(
             Func<T, Result<T>> onSome,
-            Func<Result<T>> onNone) =>
-            @this.IsSome
+            Func<Result<T>> onNone)
+        {
+            ArgumentNullException.ThrowIfNull(onSome);
+            ArgumentNullException.ThrowIfNull(onNone);
+
+            return @this.IsSome
                 ? onSome(@this.Value!)
                 : onNone();
+        }
 
         // =========================
         // Bind
         // =========================
 
-        public Option<T> Bind(Func<T, Option<T>> binder) =>
-            @this.IsSome
+        public Option<TResult> Bind<TResult>(Func<T, Option<TResult>> binder)
+        {
+            ArgumentNullException.ThrowIfNull(binder);
+
+            return @this.IsSome
                 ? binder(@this.Value!)
-                : @this;
+                : None<TResult>();
+        }
 
         // =========================
         // Map
         // =========================
 
         public Option<TResult> Map<TResult>(
-            Func<T, TResult> mapper) =>
-            @this.IsSome
-                ? Some(mapper(@this.Value!))
+            Func<T, TResult> mapper)
+        {
+            ArgumentNullException.ThrowIfNull(mapper);
+
+            return @this.IsSome
+                ? From(mapper(@this.Value!))
                 : None<TResult>();
+        }
 
         // =========================
         // Ensure
         // =========================
 
         public Option<T> Ensure(
-            Func<T, bool> predicate) =>
-            @this.IsSome
+            Func<T, bool> predicate)
+        {
+            ArgumentNullException.ThrowIfNull(predicate);
+
+            return @this.IsSome
                 ? predicate(@this.Value!)
                     ? @this
                     : None<T>()
                 : None<T>();
+        }
 
         // =========================
         // Match
@@ -68,20 +91,29 @@ public static partial class Option
 
         public TResult Match<TResult>(
             Func<T, TResult> onSome,
-            Func<TResult> onNone) =>
-            @this.IsSome
+            Func<TResult> onNone)
+        {
+            ArgumentNullException.ThrowIfNull(onSome);
+            ArgumentNullException.ThrowIfNull(onNone);
+
+            return @this.IsSome
                 ? onSome(@this.Value!)
                 : onNone();
+        }
 
         // =========================
         // Fallback
         // =========================
 
         public Option<T> OrElse(
-            Func<Option<T>> fallback) =>
-            @this.IsSome
+            Func<Option<T>> fallback)
+        {
+            ArgumentNullException.ThrowIfNull(fallback);
+
+            return @this.IsSome
                 ? @this
                 : fallback();
+        }
 
         public Option<T> OrElse(
             T fallbackValue) =>
