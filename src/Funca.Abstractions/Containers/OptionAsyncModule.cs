@@ -1,6 +1,4 @@
-﻿using static Funca.Abstractions.Containers.Result;
-
-namespace Funca.Abstractions.Containers;
+﻿namespace Funca.Abstractions.Containers;
 
 public static partial class Option
 {
@@ -22,7 +20,7 @@ public static partial class Option
                 : onNone();
         }
 
-        public ValueTask<Result<T>> ToResult(
+        public ValueTask<Result<T>> ToResultValueTask(
             Func<T, ValueTask<Result<T>>> onSome,
             Func<ValueTask<Result<T>>> onNone)
         {
@@ -48,66 +46,98 @@ public static partial class Option
                 : Task.FromResult(None<TResult>());
         }
 
-        public ValueTask<Option<TResult>> Bind<TResult>(
+        public ValueTask<Option<TResult>> BindValueTask<TResult>(
             Func<T, ValueTask<Option<TResult>>> binder)
         {
             ArgumentNullException.ThrowIfNull(binder);
 
             return @this.IsSome
                 ? binder(@this.Value!)
-                : new ValueTask<Option<TResult>>(None<TResult>());
+                : ValueTask.FromResult(None<TResult>());
         }
 
         // =========================
         // Map
         // =========================
 
-        public async Task<Option<TResult>> Map<TResult>(
+        public Task<Option<TResult>> Map<TResult>(
             Func<T, Task<TResult>> mapper)
         {
             ArgumentNullException.ThrowIfNull(mapper);
 
-            return @this.IsSome
-                ? From(await mapper(@this.Value!))
-                : None<TResult>();
+            if (@this.IsNone)
+                return Task.FromResult(None<TResult>());
+
+            return ExecuteAsync(@this.Value!, mapper);
+
+            static async Task<Option<TResult>> ExecuteAsync(
+                T value,
+                Func<T, Task<TResult>> mapper)
+            {
+                return From(await mapper(value));
+            }
         }
 
-        public async ValueTask<Option<TResult>> Map<TResult>(
+        public ValueTask<Option<TResult>> MapValueTask<TResult>(
             Func<T, ValueTask<TResult>> mapper)
         {
             ArgumentNullException.ThrowIfNull(mapper);
 
-            return @this.IsSome
-                ? From(await mapper(@this.Value!))
-                : None<TResult>();
+            if (@this.IsNone)
+                return ValueTask.FromResult(None<TResult>());
+
+            return ExecuteAsync(@this.Value!, mapper);
+
+            static async ValueTask<Option<TResult>> ExecuteAsync(
+                T value,
+                Func<T, ValueTask<TResult>> mapper)
+            {
+                return From(await mapper(value));
+            }
         }
 
         // =========================
         // Ensure
         // =========================
 
-        public async Task<Option<T>> Ensure(
+        public Task<Option<T>> Ensure(
             Func<T, Task<bool>> predicate)
         {
             ArgumentNullException.ThrowIfNull(predicate);
 
-            return @this.IsSome
-                ? await predicate(@this.Value!)
-                    ? @this
-                    : None<T>()
-                : None<T>();
+            if (@this.IsNone)
+                return Task.FromResult(None<T>());
+
+            return ExecuteAsync(@this, predicate);
+
+            static async Task<Option<T>> ExecuteAsync(
+                Option<T> option,
+                Func<T, Task<bool>> predicate)
+            {
+                return await predicate(option.Value!)
+                    ? option
+                    : None<T>();
+            }
         }
 
-        public async ValueTask<Option<T>> Ensure(
+        public ValueTask<Option<T>> EnsureValueTask(
             Func<T, ValueTask<bool>> predicate)
         {
             ArgumentNullException.ThrowIfNull(predicate);
 
-            return @this.IsSome
-                ? await predicate(@this.Value!)
-                    ? @this
-                    : None<T>()
-                : None<T>();
+            if (@this.IsNone)
+                return ValueTask.FromResult(None<T>());
+
+            return ExecuteAsync(@this, predicate);
+
+            static async ValueTask<Option<T>> ExecuteAsync(
+                Option<T> option,
+                Func<T, ValueTask<bool>> predicate)
+            {
+                return await predicate(option.Value!)
+                    ? option
+                    : None<T>();
+            }
         }
 
         // =========================
@@ -126,7 +156,7 @@ public static partial class Option
                 : onNone();
         }
 
-        public ValueTask<TResult> Match<TResult>(
+        public ValueTask<TResult> MatchValueTask<TResult>(
             Func<T, ValueTask<TResult>> onSome,
             Func<ValueTask<TResult>> onNone)
         {
@@ -152,13 +182,13 @@ public static partial class Option
                 : fallback();
         }
 
-        public ValueTask<Option<T>> OrElse(
+        public ValueTask<Option<T>> OrElseValueTask(
             Func<ValueTask<Option<T>>> fallback)
         {
             ArgumentNullException.ThrowIfNull(fallback);
 
             return @this.IsSome
-                ? new ValueTask<Option<T>>(@this)
+                ? ValueTask.FromResult(@this)
                 : fallback();
         }
     }

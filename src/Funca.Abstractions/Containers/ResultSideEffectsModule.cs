@@ -20,35 +20,49 @@ public static partial class Result
             return @this;
         }
 
-        public async Task<Result<T>> Tee(Func<T, Task> action)
+        public Task<Result<T>> Tee(Func<T, Task> action)
         {
             ArgumentNullException.ThrowIfNull(action);
 
             if (@this.IsError)
-                return @this;
+                return Task.FromResult(@this);
 
-            await action(@this.Value!);
+            return ExecuteAsync(@this, action);
 
-            return @this;
+            static async Task<Result<T>> ExecuteAsync(
+                Result<T> result,
+                Func<T, Task> action)
+            {
+                await action(result.Value!);
+
+                return result;
+            }
         }
 
-        public async ValueTask<Result<T>> Tee(Func<T, ValueTask> action)
+        public ValueTask<Result<T>> TeeValueTask(Func<T, ValueTask> action)
         {
             ArgumentNullException.ThrowIfNull(action);
 
             if (@this.IsError)
-                return @this;
+                return ValueTask.FromResult(@this);
 
-            await action(@this.Value!);
+            return ExecuteAsync(@this, action);
 
-            return @this;
+            static async ValueTask<Result<T>> ExecuteAsync(
+                Result<T> result,
+                Func<T, ValueTask> action)
+            {
+                await action(result.Value!);
+
+                return result;
+            }
         }
 
         // =========================
         // Adaptadores
         // =========================
 
-        public Task<Result<T>> TeeFromResult(Action<T> action)
+        public Task<Result<T>> TeeAsTask(Action<T> action)
         {
             ArgumentNullException.ThrowIfNull(action);
 
@@ -60,7 +74,7 @@ public static partial class Result
             return Task.FromResult(@this);
         }
 
-        public ValueTask<Result<T>> TeeFromValueTask(Action<T> action)
+        public ValueTask<Result<T>> TeeAsValueTask(Action<T> action)
         {
             ArgumentNullException.ThrowIfNull(action);
 
@@ -70,6 +84,44 @@ public static partial class Result
             action(@this.Value!);
 
             return ValueTask.FromResult(@this);
+        }
+
+        public Task<Result<T>> TeeFromTask(Func<T, Task> action)
+        {
+            ArgumentNullException.ThrowIfNull(action);
+
+            if (@this.IsError)
+                return Task.FromResult(@this);
+
+            return ExecuteAsync(@this, action);
+
+            static async Task<Result<T>> ExecuteAsync(
+                Result<T> result,
+                Func<T, Task> action)
+            {
+                await action(result.Value!);
+
+                return result;
+            }
+        }
+
+        public ValueTask<Result<T>> TeeFromValueTask(Func<T, ValueTask> action)
+        {
+            ArgumentNullException.ThrowIfNull(action);
+
+            if (@this.IsError)
+                return ValueTask.FromResult(@this);
+
+            return ExecuteAsync(@this, action);
+
+            static async ValueTask<Result<T>> ExecuteAsync(
+                Result<T> result,
+                Func<T, ValueTask> action)
+            {
+                await action(result.Value!);
+
+                return result;
+            }
         }
     }
 
@@ -117,7 +169,7 @@ public static partial class Result
         // Tee ValueTask
         // =========================
 
-        public async ValueTask<Result<T>> Tee(Func<T, ValueTask> action)
+        public async ValueTask<Result<T>> TeeValueTask(Func<T, ValueTask> action)
         {
             ArgumentNullException.ThrowIfNull(@this);
             ArgumentNullException.ThrowIfNull(action);
@@ -175,7 +227,7 @@ public static partial class Result
         // Tee ValueTask
         // =========================
 
-        public async ValueTask<Result<T>> Tee(Func<T, ValueTask> action)
+        public async ValueTask<Result<T>> TeeValueTask(Func<T, ValueTask> action)
         {
             ArgumentNullException.ThrowIfNull(action);
 
@@ -222,7 +274,7 @@ public static partial class Result
                 await onFailure(@this.Errors);
         }
 
-        public async ValueTask Match(
+        public async ValueTask MatchValueTask(
             Func<TValue, ValueTask> onSuccess,
             Func<ErrorResult[], ValueTask> onFailure)
         {
@@ -270,7 +322,7 @@ public static partial class Result
                 await onFailure(result.Errors);
         }
 
-        public async ValueTask Match(
+        public async ValueTask MatchValueTask(
             Func<TValue, ValueTask> onSuccess,
             Func<ErrorResult[], ValueTask> onFailure)
         {
@@ -319,7 +371,7 @@ public static partial class Result
                 await onFailure(result.Errors);
         }
 
-        public async ValueTask Match(
+        public async ValueTask MatchValueTask(
             Func<TValue, ValueTask> onSuccess,
             Func<ErrorResult[], ValueTask> onFailure)
         {

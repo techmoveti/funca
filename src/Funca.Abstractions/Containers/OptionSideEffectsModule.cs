@@ -10,28 +10,48 @@ public static partial class Option
 
         public Option<T> Tee(Action<T> action)
         {
+            ArgumentNullException.ThrowIfNull(action);
+
             if (@this.IsSome)
                 action(@this.Value!);
 
             return @this;
         }
 
-        public async Task<Option<T>> Tee(
-            Func<T, Task> action)
+        public Task<Option<T>> Tee(Func<T, Task> action)
         {
-            if (@this.IsSome)
-                await action(@this.Value!);
+            ArgumentNullException.ThrowIfNull(action);
 
-            return @this;
+            if (@this.IsNone)
+                return Task.FromResult(@this);
+
+            return ExecuteAsync(@this, action);
+
+            static async Task<Option<T>> ExecuteAsync(
+                Option<T> option,
+                Func<T, Task> action)
+            {
+                await action(option.Value!);
+                return option;
+            }
         }
 
-        public async ValueTask<Option<T>> Tee(
-            Func<T, ValueTask> action)
+        public ValueTask<Option<T>> TeeValueTask(Func<T, ValueTask> action)
         {
-            if (@this.IsSome)
-                await action(@this.Value!);
+            ArgumentNullException.ThrowIfNull(action);
 
-            return @this;
+            if (@this.IsNone)
+                return ValueTask.FromResult(@this);
+
+            return ExecuteAsync(@this, action);
+
+            static async ValueTask<Option<T>> ExecuteAsync(
+                Option<T> option,
+                Func<T, ValueTask> action)
+            {
+                await action(option.Value!);
+                return option;
+            }
         }
 
         // =========================
@@ -40,28 +60,48 @@ public static partial class Option
 
         public Option<T> IfNone(Action action)
         {
+            ArgumentNullException.ThrowIfNull(action);
+
             if (@this.IsNone)
                 action();
 
             return @this;
         }
 
-        public async Task<Option<T>> IfNone(
-            Func<Task> action)
+        public Task<Option<T>> IfNone(Func<Task> action)
         {
-            if (@this.IsNone)
-                await action();
+            ArgumentNullException.ThrowIfNull(action);
 
-            return @this;
+            if (@this.IsSome)
+                return Task.FromResult(@this);
+
+            return ExecuteAsync(@this, action);
+
+            static async Task<Option<T>> ExecuteAsync(
+                Option<T> option,
+                Func<Task> action)
+            {
+                await action();
+                return option;
+            }
         }
 
-        public async ValueTask<Option<T>> IfNone(
-            Func<ValueTask> action)
+        public ValueTask<Option<T>> IfNoneValueTask(Func<ValueTask> action)
         {
-            if (@this.IsNone)
-                await action();
+            ArgumentNullException.ThrowIfNull(action);
 
-            return @this;
+            if (@this.IsSome)
+                return ValueTask.FromResult(@this);
+
+            return ExecuteAsync(@this, action);
+
+            static async ValueTask<Option<T>> ExecuteAsync(
+                Option<T> option,
+                Func<ValueTask> action)
+            {
+                await action();
+                return option;
+            }
         }
 
         // =========================
@@ -72,30 +112,37 @@ public static partial class Option
             Action<T> onSome,
             Action onNone)
         {
+            ArgumentNullException.ThrowIfNull(onSome);
+            ArgumentNullException.ThrowIfNull(onNone);
+
             if (@this.IsSome)
                 onSome(@this.Value!);
             else
                 onNone();
         }
 
-        public async Task Match(
+        public Task Match(
             Func<T, Task> onSome,
             Func<Task> onNone)
         {
-            if (@this.IsSome)
-                await onSome(@this.Value!);
-            else
-                await onNone();
+            ArgumentNullException.ThrowIfNull(onSome);
+            ArgumentNullException.ThrowIfNull(onNone);
+
+            return @this.IsSome
+                ? onSome(@this.Value!)
+                : onNone();
         }
 
-        public async ValueTask Match(
+        public ValueTask MatchValueTask(
             Func<T, ValueTask> onSome,
             Func<ValueTask> onNone)
         {
-            if (@this.IsSome)
-                await onSome(@this.Value!);
-            else
-                await onNone();
+            ArgumentNullException.ThrowIfNull(onSome);
+            ArgumentNullException.ThrowIfNull(onNone);
+
+            return @this.IsSome
+                ? onSome(@this.Value!)
+                : onNone();
         }
     }
 }
