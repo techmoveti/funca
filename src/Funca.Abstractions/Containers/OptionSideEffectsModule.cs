@@ -32,6 +32,7 @@ public static partial class Option
                 Func<T, Task> action)
             {
                 await action(option.Value!);
+
                 return option;
             }
         }
@@ -50,6 +51,7 @@ public static partial class Option
                 Func<T, ValueTask> action)
             {
                 await action(option.Value!);
+
                 return option;
             }
         }
@@ -82,6 +84,7 @@ public static partial class Option
                 Func<Task> action)
             {
                 await action();
+
                 return option;
             }
         }
@@ -100,6 +103,7 @@ public static partial class Option
                 Func<ValueTask> action)
             {
                 await action();
+
                 return option;
             }
         }

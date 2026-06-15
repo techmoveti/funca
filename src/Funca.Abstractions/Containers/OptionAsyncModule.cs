@@ -72,10 +72,7 @@ public static partial class Option
 
             static async Task<Option<TResult>> ExecuteAsync(
                 T value,
-                Func<T, Task<TResult>> mapper)
-            {
-                return From(await mapper(value));
-            }
+                Func<T, Task<TResult>> mapper) => From(await mapper(value));
         }
 
         public ValueTask<Option<TResult>> MapValueTask<TResult>(
@@ -90,10 +87,7 @@ public static partial class Option
 
             static async ValueTask<Option<TResult>> ExecuteAsync(
                 T value,
-                Func<T, ValueTask<TResult>> mapper)
-            {
-                return From(await mapper(value));
-            }
+                Func<T, ValueTask<TResult>> mapper) => From(await mapper(value));
         }
 
         // =========================
@@ -112,12 +106,9 @@ public static partial class Option
 
             static async Task<Option<T>> ExecuteAsync(
                 Option<T> option,
-                Func<T, Task<bool>> predicate)
-            {
-                return await predicate(option.Value!)
-                    ? option
-                    : None<T>();
-            }
+                Func<T, Task<bool>> predicate) => await predicate(option.Value!)
+                ? option
+                : None<T>();
         }
 
         public ValueTask<Option<T>> EnsureValueTask(
@@ -132,12 +123,9 @@ public static partial class Option
 
             static async ValueTask<Option<T>> ExecuteAsync(
                 Option<T> option,
-                Func<T, ValueTask<bool>> predicate)
-            {
-                return await predicate(option.Value!)
-                    ? option
-                    : None<T>();
-            }
+                Func<T, ValueTask<bool>> predicate) => await predicate(option.Value!)
+                ? option
+                : None<T>();
         }
 
         // =========================
