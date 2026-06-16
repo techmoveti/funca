@@ -22,7 +22,7 @@ public record EventEnvelopeState(
     Guid AggregateId,
     DateTimeOffset Timestamp,
     string? ActorId,
-    string? ActorName,    
+    string? ActorName,
     string? CorrelationId,
     string EventType,
     JsonDocument Payload) : IState;

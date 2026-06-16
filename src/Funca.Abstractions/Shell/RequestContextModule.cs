@@ -21,21 +21,27 @@ public static class RequestContextModule
 
         public Result<EventEnvelopeState> WrapEvent<TEvent>(
             string aggregateType,
+            Guid aggregateId,
             int version,
             TEvent @event)
             where TEvent : IEvent
-        {
-            return Result.Ok(new EventEnvelopeState(
-                Sequence: 0,
+            => Result.Ok(new EventEnvelopeState(
+                0,
                 version,
-                AggregateType: aggregateType,
-                AggregateId: @event.AggregateId,
-                Timestamp: @event.Timestamp,
-                ActorId: @this.UserContext.Value?.UserId,
-                ActorName: @this.UserContext.Value?.UserName,
-                CorrelationId: @this.CorrelationId.Value,
-                EventType: @event.GetType().Name,
-                Payload: JsonSerializer.SerializeToDocument(@event)));
-        }
+                aggregateType,
+                aggregateId,
+                @event.Timestamp,
+                @this.UserContext.Value?.UserId,
+                @this.UserContext.Value?.UserName,
+                @this.CorrelationId.Value,
+                @event.GetType().Name,
+                JsonSerializer.SerializeToDocument(@event)));
+
+        public Result<EventEnvelopeState> WrapEvent<TEvent, TAggregate>(
+            Guid aggregateId,
+            int version,
+            TEvent @event)
+            where TEvent : IEvent
+            => @this.WrapEvent(typeof(TAggregate).Name, aggregateId, version, @event);
     }
 }
