@@ -1,7 +1,7 @@
 ﻿namespace Funca.Abstractions.Data;
 
 /// <summary>
-///     Event data store.
+///     Event data store - Imperative Shell for event sourcing.
 /// </summary>
 public interface IEventStore
 {

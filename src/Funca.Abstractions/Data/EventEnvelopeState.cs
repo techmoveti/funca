@@ -1,5 +1,3 @@
-using System.Text.Json;
-
 namespace Funca.Abstractions.Data;
 
 /// <summary>
@@ -7,6 +5,7 @@ namespace Funca.Abstractions.Data;
 /// </summary>
 /// <param name="Sequence"></param>
 /// <param name="Version"></param>
+/// <param name="TenantId"></param>
 /// <param name="AggregateType"></param>
 /// <param name="AggregateId"></param>
 /// <param name="Timestamp"></param>
@@ -18,6 +17,7 @@ namespace Funca.Abstractions.Data;
 public record EventEnvelopeState(
     long Sequence,
     int Version,
+    TenantId TenantId,
     string AggregateType,
     Guid AggregateId,
     DateTimeOffset Timestamp,
@@ -25,4 +25,4 @@ public record EventEnvelopeState(
     string? ActorName,
     string? CorrelationId,
     string EventType,
-    JsonDocument Payload) : IState;
+    JsonDocument Payload) : IState, IRequireTenantPartition;

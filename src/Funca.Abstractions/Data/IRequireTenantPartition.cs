@@ -11,4 +11,4 @@ public interface IRequireTenantPartition
 /// <summary>
 ///     TenantId - Represents a unique identifier for a tenant in a multi-tenant application.
 /// </summary>
-public readonly record struct TenantId(string Id);
+public readonly record struct TenantId(string Value);

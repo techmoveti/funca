@@ -2,6 +2,5 @@
 
 public interface IEvent : IMessage
 {
-    //Guid AggregateId { get; }
     DateTimeOffset Timestamp { get; }
 }

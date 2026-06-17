@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using Funca.Abstractions.Data;
+﻿using Funca.Abstractions.Data;
 
 namespace Funca.Abstractions.Shell;
 
@@ -8,7 +7,7 @@ public static class RequestContextModule
     extension(RequestContext @this)
     {
         public void SetTenant(TenantId tenantId)
-            => @this.Attach("tenantId", tenantId.Id);
+            => @this.Attach("tenantId", tenantId.Value);
 
         public Option<TenantId> GetTenant()
         {
@@ -25,17 +24,22 @@ public static class RequestContextModule
             int version,
             TEvent @event)
             where TEvent : IEvent
-            => Result.Ok(new EventEnvelopeState(
-                0,
-                version,
-                aggregateType,
-                aggregateId,
-                @event.Timestamp,
-                @this.UserContext.Value?.UserId,
-                @this.UserContext.Value?.UserName,
-                @this.CorrelationId.Value,
-                @event.GetType().Name,
-                JsonSerializer.SerializeToDocument(@event)));
+            => @this
+                .GetTenant()
+                .ToResult()
+                .Map(tenantId =>
+                    new EventEnvelopeState(
+                        0,
+                        version,
+                        tenantId,
+                        aggregateType,
+                        aggregateId,
+                        @event.Timestamp,
+                        @this.UserContext.Value?.UserId,
+                        @this.UserContext.Value?.UserName,
+                        @this.CorrelationId.Value,
+                        @event.GetType().Name,
+                        JsonSerializer.SerializeToDocument(@event)));
 
         public Result<EventEnvelopeState> WrapEvent<TEvent, TAggregate>(
             Guid aggregateId,
