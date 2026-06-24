@@ -1,4 +1,6 @@
-﻿namespace Funca.Abstractions.Metadata;
+﻿using System.Collections.Immutable;
+
+namespace Funca.Abstractions.Metadata;
 
 /// <summary>
 /// Defines an interface for objects that have a collection of custom data.
@@ -7,7 +9,7 @@
 /// </summary>
 public interface IHaveCustomData
 {
-    IEnumerable<CustomData> CustomData { get; }
+    ImmutableArray<CustomData> CustomData { get; }
 }
 
 /// <summary>
