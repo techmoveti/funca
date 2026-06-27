@@ -2,7 +2,7 @@ using Funca.Abstractions.Data;
 
 namespace Funca.Abstractions.Metadata;
 
-public readonly record struct FieldId(string Value);
+public readonly record struct FieldId(Guid Value);
 
 /// <summary>
 /// Represents the metadata for a custom field associated with a specific entity.
