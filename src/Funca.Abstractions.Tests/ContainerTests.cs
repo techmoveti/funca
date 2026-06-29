@@ -72,6 +72,73 @@ public class ContainerTests
     }
 
     [Fact]
+    public async Task ResultEnsureTaskBehavior()
+    {
+        var ok = await Result
+            .Ok(4)
+            .Ensure(
+                x => Task.FromResult(x > 3),
+                () => ErrorResult.Validation("invalid"));
+
+        Assert.True(ok.IsOk);
+        Assert.Equal(4, ok.Unwrap());
+
+        var error = await Result
+            .Ok(2)
+            .Ensure(
+                x => Task.FromResult(x > 3),
+                () => ErrorResult.Validation("invalid"));
+
+        Assert.True(error.IsError);
+        Assert.Single(error.Errors);
+        Assert.Equal("invalid", error.Errors[0].Message);
+    }
+
+    [Fact]
+    public async Task ResultEnsureValueTaskBehavior()
+    {
+        var ok = await Result
+            .Ok(4)
+            .EnsureValueTask(
+                x => ValueTask.FromResult(x > 3),
+                () => ErrorResult.Validation("invalid"));
+
+        Assert.True(ok.IsOk);
+        Assert.Equal(4, ok.Unwrap());
+
+        var error = await Result
+            .Ok(2)
+            .EnsureValueTask(
+                x => ValueTask.FromResult(x > 3),
+                () => ErrorResult.Validation("invalid"));
+
+        Assert.True(error.IsError);
+        Assert.Single(error.Errors);
+        Assert.Equal("invalid", error.Errors[0].Message);
+    }
+
+    [Fact]
+    public async Task ResultEnsureDoesNotRunConditionWhenAlreadyError()
+    {
+        var conditionWasCalled = false;
+
+        var result = await Task
+            .FromResult(Result.Error<int>(ErrorResult.Validation("original")))
+            .Ensure(
+                x =>
+                {
+                    conditionWasCalled = true;
+                    return x > 0;
+                },
+                () => ErrorResult.Validation("new"));
+
+        Assert.True(result.IsError);
+        Assert.False(conditionWasCalled);
+        Assert.Single(result.Errors);
+        Assert.Equal("original", result.Errors[0].Message);
+    }
+
+    [Fact]
     public void ErrorResultFactoriesProduceExpectedValues()
     {
         var validation = ErrorResult.Validation("fail");

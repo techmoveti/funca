@@ -59,6 +59,50 @@ public static partial class Result
                 T value,
                 Func<T, ValueTask<TResult>> mapper) => Ok(await mapper(value));
         }
+
+        // =========================
+        // Ensure
+        // =========================
+
+        public Task<Result<T>> Ensure(
+            Func<T, Task<bool>> condition,
+            Func<ErrorResult> errorFactory)
+        {
+            ArgumentNullException.ThrowIfNull(condition);
+            ArgumentNullException.ThrowIfNull(errorFactory);
+
+            if (@this.IsError)
+                return Task.FromResult(@this);
+
+            return ExecuteAsync(@this, condition, errorFactory);
+
+            static async Task<Result<T>> ExecuteAsync(
+                Result<T> result,
+                Func<T, Task<bool>> condition,
+                Func<ErrorResult> errorFactory) => await condition(result.Value!)
+                ? result
+                : Error<T>(errorFactory());
+        }
+
+        public ValueTask<Result<T>> EnsureValueTask(
+            Func<T, ValueTask<bool>> condition,
+            Func<ErrorResult> errorFactory)
+        {
+            ArgumentNullException.ThrowIfNull(condition);
+            ArgumentNullException.ThrowIfNull(errorFactory);
+
+            if (@this.IsError)
+                return ValueTask.FromResult(@this);
+
+            return ExecuteAsync(@this, condition, errorFactory);
+
+            static async ValueTask<Result<T>> ExecuteAsync(
+                Result<T> result,
+                Func<T, ValueTask<bool>> condition,
+                Func<ErrorResult> errorFactory) => await condition(result.Value!)
+                ? result
+                : Error<T>(errorFactory());
+        }
     }
 
     extension<T>(Task<Result<T>> @this)
@@ -148,6 +192,61 @@ public static partial class Result
                 ? Ok(await mapper(result.Value!))
                 : Error<TResult>(result.Errors);
         }
+
+        // =========================
+        // Ensure
+        // =========================
+
+        public async Task<Result<T>> Ensure(
+            Func<T, bool> condition,
+            Func<ErrorResult> errorFactory)
+        {
+            ArgumentNullException.ThrowIfNull(@this);
+            ArgumentNullException.ThrowIfNull(condition);
+            ArgumentNullException.ThrowIfNull(errorFactory);
+
+            var result = await @this;
+
+            return result.IsError
+                ? result
+                : condition(result.Value!)
+                    ? result
+                    : Error<T>(errorFactory());
+        }
+
+        public async Task<Result<T>> Ensure(
+            Func<T, Task<bool>> condition,
+            Func<ErrorResult> errorFactory)
+        {
+            ArgumentNullException.ThrowIfNull(@this);
+            ArgumentNullException.ThrowIfNull(condition);
+            ArgumentNullException.ThrowIfNull(errorFactory);
+
+            var result = await @this;
+
+            return result.IsError
+                ? result
+                : await condition(result.Value!)
+                    ? result
+                    : Error<T>(errorFactory());
+        }
+
+        public async ValueTask<Result<T>> EnsureValueTask(
+            Func<T, ValueTask<bool>> condition,
+            Func<ErrorResult> errorFactory)
+        {
+            ArgumentNullException.ThrowIfNull(@this);
+            ArgumentNullException.ThrowIfNull(condition);
+            ArgumentNullException.ThrowIfNull(errorFactory);
+
+            var result = await @this;
+
+            return result.IsError
+                ? result
+                : await condition(result.Value!)
+                    ? result
+                    : Error<T>(errorFactory());
+        }
     }
 
     extension<T>(ValueTask<Result<T>> @this)
@@ -230,6 +329,58 @@ public static partial class Result
             return result.IsOk
                 ? Ok(await mapper(result.Value!))
                 : Error<TResult>(result.Errors);
+        }
+
+        // =========================
+        // Ensure
+        // =========================
+
+        public async ValueTask<Result<T>> Ensure(
+            Func<T, bool> condition,
+            Func<ErrorResult> errorFactory)
+        {
+            ArgumentNullException.ThrowIfNull(condition);
+            ArgumentNullException.ThrowIfNull(errorFactory);
+
+            var result = await @this;
+
+            return result.IsError
+                ? result
+                : condition(result.Value!)
+                    ? result
+                    : Error<T>(errorFactory());
+        }
+
+        public async ValueTask<Result<T>> Ensure(
+            Func<T, Task<bool>> condition,
+            Func<ErrorResult> errorFactory)
+        {
+            ArgumentNullException.ThrowIfNull(condition);
+            ArgumentNullException.ThrowIfNull(errorFactory);
+
+            var result = await @this;
+
+            return result.IsError
+                ? result
+                : await condition(result.Value!)
+                    ? result
+                    : Error<T>(errorFactory());
+        }
+
+        public async ValueTask<Result<T>> EnsureValueTask(
+            Func<T, ValueTask<bool>> condition,
+            Func<ErrorResult> errorFactory)
+        {
+            ArgumentNullException.ThrowIfNull(condition);
+            ArgumentNullException.ThrowIfNull(errorFactory);
+
+            var result = await @this;
+
+            return result.IsError
+                ? result
+                : await condition(result.Value!)
+                    ? result
+                    : Error<T>(errorFactory());
         }
     }
 }
