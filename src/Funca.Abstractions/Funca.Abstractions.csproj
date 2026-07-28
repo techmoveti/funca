@@ -12,7 +12,7 @@
         <PackageProjectUrl>https://github.com/techmoveti/funca</PackageProjectUrl>
         <PackageIcon>techmove-icon.png</PackageIcon>
         <RepositoryUrl>https://github.com/techmoveti/funca</RepositoryUrl>
-        <Version>1.0.13</Version>
+        <Version>2.11.1</Version>
     </PropertyGroup>
 
     <ItemGroup>
