@@ -10,7 +10,8 @@ public interface IState<out TKey> : IState where TKey : notnull
 /// <summary>
 ///     State/Snapshot in Event Sourcing Approach
 /// </summary>
-public interface IVersionedState
+public interface ISnapshotState
 {
     int Version { get; }
+    public DateTime SnapshotAt { get; set; }
 }

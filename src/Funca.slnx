@@ -1,4 +1,3 @@
 <Solution>
-    <Project Path="Funca.Abstractions.Tests/Funca.Abstractions.Tests.csproj"/>
     <Project Path="Funca.Abstractions/Funca.Abstractions.csproj"/>
 </Solution>
