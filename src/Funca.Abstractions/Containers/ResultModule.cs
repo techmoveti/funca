@@ -22,6 +22,9 @@ public static partial class Result
         return Result<T>.Error(errors);
     }
 
+    public static Result<T> Error<T>(ReadOnlySpan<ErrorResult> errors)
+        => Result<T>.Error(errors);
+
     public static async Task<TResult> Match<T, TResult>(
         this Task<Result<T>> @this,
         Func<T, Task<TResult>> onSuccess,
@@ -34,7 +37,7 @@ public static partial class Result
 
         return result.IsOk
             ? await onSuccess(result.Unwrap())
-            : await onFailure(result.Errors);
+            : await onFailure(result.ErrorsToArray());
     }
 
     extension<T>(Result<T> @this)
@@ -64,7 +67,7 @@ public static partial class Result
 
             return @this.IsOk
                 ? onSuccess(@this.Unwrap())
-                : onFailure(@this.Errors);
+                : onFailure(@this.ErrorsToArray());
         }
     }
 

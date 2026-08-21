@@ -121,7 +121,7 @@ public static partial class Result
 
             return result.IsOk
                 ? binder(result.Value!)
-                : Error<TResult>(result.Errors);
+                : Error<TResult>(result.ErrorsToArray());
         }
 
         public async Task<Result<TResult>> Bind<TResult>(
@@ -134,7 +134,7 @@ public static partial class Result
 
             return result.IsOk
                 ? await binder(result.Value!)
-                : Error<TResult>(result.Errors);
+                : Error<TResult>(result.ErrorsToArray());
         }
 
         public async ValueTask<Result<TResult>> BindValueTask<TResult>(
@@ -147,7 +147,7 @@ public static partial class Result
 
             return result.IsOk
                 ? await binder(result.Value!)
-                : Error<TResult>(result.Errors);
+                : Error<TResult>(result.ErrorsToArray());
         }
 
         // =========================
@@ -164,7 +164,7 @@ public static partial class Result
 
             return result.IsOk
                 ? Ok(mapper(result.Value!))
-                : Error<TResult>(result.Errors);
+                : Error<TResult>(result.ErrorsToArray());
         }
 
         public async Task<Result<TResult>> Map<TResult>(
@@ -177,7 +177,7 @@ public static partial class Result
 
             return result.IsOk
                 ? Ok(await mapper(result.Value!))
-                : Error<TResult>(result.Errors);
+                : Error<TResult>(result.ErrorsToArray());
         }
 
         public async ValueTask<Result<TResult>> MapValueTask<TResult>(
@@ -190,7 +190,7 @@ public static partial class Result
 
             return result.IsOk
                 ? Ok(await mapper(result.Value!))
-                : Error<TResult>(result.Errors);
+                : Error<TResult>(result.ErrorsToArray());
         }
 
         // =========================
@@ -264,7 +264,7 @@ public static partial class Result
 
             return result.IsOk
                 ? binder(result.Value!)
-                : Error<TResult>(result.Errors);
+                : Error<TResult>(result.ErrorsToArray());
         }
 
         public async ValueTask<Result<TResult>> Bind<TResult>(
@@ -276,7 +276,7 @@ public static partial class Result
 
             return result.IsOk
                 ? await binder(result.Value!)
-                : Error<TResult>(result.Errors);
+                : Error<TResult>(result.ErrorsToArray());
         }
 
         public async ValueTask<Result<TResult>> BindValueTask<TResult>(
@@ -288,7 +288,7 @@ public static partial class Result
 
             return result.IsOk
                 ? await binder(result.Value!)
-                : Error<TResult>(result.Errors);
+                : Error<TResult>(result.ErrorsToArray());
         }
 
         // =========================
@@ -304,7 +304,7 @@ public static partial class Result
 
             return result.IsOk
                 ? Ok(mapper(result.Value!))
-                : Error<TResult>(result.Errors);
+                : Error<TResult>(result.ErrorsToArray());
         }
 
         public async ValueTask<Result<TResult>> Map<TResult>(
@@ -316,7 +316,7 @@ public static partial class Result
 
             return result.IsOk
                 ? Ok(await mapper(result.Value!))
-                : Error<TResult>(result.Errors);
+                : Error<TResult>(result.ErrorsToArray());
         }
 
         public async ValueTask<Result<TResult>> MapValueTask<TResult>(
@@ -328,7 +328,7 @@ public static partial class Result
 
             return result.IsOk
                 ? Ok(await mapper(result.Value!))
-                : Error<TResult>(result.Errors);
+                : Error<TResult>(result.ErrorsToArray());
         }
 
         // =========================

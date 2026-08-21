@@ -258,7 +258,7 @@ public static partial class Result
             if (@this.IsOk)
                 onSuccess(@this.Unwrap());
             else
-                onFailure(@this.Errors);
+                onFailure(@this.ErrorsToArray());
         }
 
         public async Task Match(
@@ -271,7 +271,7 @@ public static partial class Result
             if (@this.IsOk)
                 await onSuccess(@this.Unwrap());
             else
-                await onFailure(@this.Errors);
+                await onFailure(@this.ErrorsToArray());
         }
 
         public async ValueTask MatchValueTask(
@@ -284,7 +284,7 @@ public static partial class Result
             if (@this.IsOk)
                 await onSuccess(@this.Unwrap());
             else
-                await onFailure(@this.Errors);
+                await onFailure(@this.ErrorsToArray());
         }
     }
 
@@ -303,7 +303,7 @@ public static partial class Result
             if (result.IsOk)
                 onSuccess(result.Unwrap());
             else
-                onFailure(result.Errors);
+                onFailure(result.ErrorsToArray());
         }
 
         public async Task Match(
@@ -319,7 +319,7 @@ public static partial class Result
             if (result.IsOk)
                 await onSuccess(result.Unwrap());
             else
-                await onFailure(result.Errors);
+                await onFailure(result.ErrorsToArray());
         }
 
         public async ValueTask MatchValueTask(
@@ -335,7 +335,7 @@ public static partial class Result
             if (result.IsOk)
                 await onSuccess(result.Unwrap());
             else
-                await onFailure(result.Errors);
+                await onFailure(result.ErrorsToArray());
         }
     }
 
@@ -353,7 +353,7 @@ public static partial class Result
             if (result.IsOk)
                 onSuccess(result.Unwrap());
             else
-                onFailure(result.Errors);
+                onFailure(result.ErrorsToArray());
         }
 
         public async ValueTask Match(
@@ -368,7 +368,7 @@ public static partial class Result
             if (result.IsOk)
                 await onSuccess(result.Unwrap());
             else
-                await onFailure(result.Errors);
+                await onFailure(result.ErrorsToArray());
         }
 
         public async ValueTask MatchValueTask(
@@ -383,7 +383,7 @@ public static partial class Result
             if (result.IsOk)
                 await onSuccess(result.Unwrap());
             else
-                await onFailure(result.Errors);
+                await onFailure(result.ErrorsToArray());
         }
     }
 }
