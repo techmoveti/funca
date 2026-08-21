@@ -72,7 +72,7 @@ public static partial class Option
 
             static async Task<Option<TResult>> ExecuteAsync(
                 T value,
-                Func<T, Task<TResult>> mapper) => From(await mapper(value));
+                Func<T, Task<TResult>> mapper) => From(await mapper(value).ConfigureAwait(false));
         }
 
         public ValueTask<Option<TResult>> MapValueTask<TResult>(
@@ -87,7 +87,7 @@ public static partial class Option
 
             static async ValueTask<Option<TResult>> ExecuteAsync(
                 T value,
-                Func<T, ValueTask<TResult>> mapper) => From(await mapper(value));
+                Func<T, ValueTask<TResult>> mapper) => From(await mapper(value).ConfigureAwait(false));
         }
 
         // =========================
@@ -106,7 +106,7 @@ public static partial class Option
 
             static async Task<Option<T>> ExecuteAsync(
                 Option<T> option,
-                Func<T, Task<bool>> predicate) => await predicate(option.Value!)
+                Func<T, Task<bool>> predicate) => await predicate(option.Value!).ConfigureAwait(false)
                 ? option
                 : None<T>();
         }
@@ -123,7 +123,7 @@ public static partial class Option
 
             static async ValueTask<Option<T>> ExecuteAsync(
                 Option<T> option,
-                Func<T, ValueTask<bool>> predicate) => await predicate(option.Value!)
+                Func<T, ValueTask<bool>> predicate) => await predicate(option.Value!).ConfigureAwait(false)
                 ? option
                 : None<T>();
         }

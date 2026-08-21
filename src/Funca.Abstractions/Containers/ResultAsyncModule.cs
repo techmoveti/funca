@@ -42,7 +42,7 @@ public static partial class Result
 
             static async Task<Result<TResult>> ExecuteAsync(
                 T value,
-                Func<T, Task<TResult>> mapper) => Ok(await mapper(value));
+                Func<T, Task<TResult>> mapper) => Ok(await mapper(value).ConfigureAwait(false));
         }
 
         public ValueTask<Result<TResult>> MapValueTask<TResult>(
@@ -57,7 +57,7 @@ public static partial class Result
 
             static async ValueTask<Result<TResult>> ExecuteAsync(
                 T value,
-                Func<T, ValueTask<TResult>> mapper) => Ok(await mapper(value));
+                Func<T, ValueTask<TResult>> mapper) => Ok(await mapper(value).ConfigureAwait(false));
         }
 
         // =========================
@@ -79,7 +79,7 @@ public static partial class Result
             static async Task<Result<T>> ExecuteAsync(
                 Result<T> result,
                 Func<T, Task<bool>> condition,
-                Func<ErrorResult> errorFactory) => await condition(result.Value!)
+                Func<ErrorResult> errorFactory) => await condition(result.Value!).ConfigureAwait(false)
                 ? result
                 : Error<T>(errorFactory());
         }
@@ -99,7 +99,7 @@ public static partial class Result
             static async ValueTask<Result<T>> ExecuteAsync(
                 Result<T> result,
                 Func<T, ValueTask<bool>> condition,
-                Func<ErrorResult> errorFactory) => await condition(result.Value!)
+                Func<ErrorResult> errorFactory) => await condition(result.Value!).ConfigureAwait(false)
                 ? result
                 : Error<T>(errorFactory());
         }
@@ -117,7 +117,7 @@ public static partial class Result
             ArgumentNullException.ThrowIfNull(@this);
             ArgumentNullException.ThrowIfNull(binder);
 
-            var result = await @this;
+            var result = await @this.ConfigureAwait(false);
 
             return result.IsOk
                 ? binder(result.Value!)
@@ -130,10 +130,10 @@ public static partial class Result
             ArgumentNullException.ThrowIfNull(@this);
             ArgumentNullException.ThrowIfNull(binder);
 
-            var result = await @this;
+            var result = await @this.ConfigureAwait(false);
 
             return result.IsOk
-                ? await binder(result.Value!)
+                ? await binder(result.Value!).ConfigureAwait(false)
                 : Error<TResult>(result.ErrorsToArray());
         }
 
@@ -143,10 +143,10 @@ public static partial class Result
             ArgumentNullException.ThrowIfNull(@this);
             ArgumentNullException.ThrowIfNull(binder);
 
-            var result = await @this;
+            var result = await @this.ConfigureAwait(false);
 
             return result.IsOk
-                ? await binder(result.Value!)
+                ? await binder(result.Value!).ConfigureAwait(false)
                 : Error<TResult>(result.ErrorsToArray());
         }
 
@@ -160,7 +160,7 @@ public static partial class Result
             ArgumentNullException.ThrowIfNull(@this);
             ArgumentNullException.ThrowIfNull(mapper);
 
-            var result = await @this;
+            var result = await @this.ConfigureAwait(false);
 
             return result.IsOk
                 ? Ok(mapper(result.Value!))
@@ -173,10 +173,10 @@ public static partial class Result
             ArgumentNullException.ThrowIfNull(@this);
             ArgumentNullException.ThrowIfNull(mapper);
 
-            var result = await @this;
+            var result = await @this.ConfigureAwait(false);
 
             return result.IsOk
-                ? Ok(await mapper(result.Value!))
+                ? Ok(await mapper(result.Value!).ConfigureAwait(false))
                 : Error<TResult>(result.ErrorsToArray());
         }
 
@@ -186,10 +186,10 @@ public static partial class Result
             ArgumentNullException.ThrowIfNull(@this);
             ArgumentNullException.ThrowIfNull(mapper);
 
-            var result = await @this;
+            var result = await @this.ConfigureAwait(false);
 
             return result.IsOk
-                ? Ok(await mapper(result.Value!))
+                ? Ok(await mapper(result.Value!).ConfigureAwait(false))
                 : Error<TResult>(result.ErrorsToArray());
         }
 
@@ -205,7 +205,7 @@ public static partial class Result
             ArgumentNullException.ThrowIfNull(condition);
             ArgumentNullException.ThrowIfNull(errorFactory);
 
-            var result = await @this;
+            var result = await @this.ConfigureAwait(false);
 
             return result.IsError
                 ? result
@@ -222,11 +222,11 @@ public static partial class Result
             ArgumentNullException.ThrowIfNull(condition);
             ArgumentNullException.ThrowIfNull(errorFactory);
 
-            var result = await @this;
+            var result = await @this.ConfigureAwait(false);
 
             return result.IsError
                 ? result
-                : await condition(result.Value!)
+                : await condition(result.Value!).ConfigureAwait(false)
                     ? result
                     : Error<T>(errorFactory());
         }
@@ -239,11 +239,11 @@ public static partial class Result
             ArgumentNullException.ThrowIfNull(condition);
             ArgumentNullException.ThrowIfNull(errorFactory);
 
-            var result = await @this;
+            var result = await @this.ConfigureAwait(false);
 
             return result.IsError
                 ? result
-                : await condition(result.Value!)
+                : await condition(result.Value!).ConfigureAwait(false)
                     ? result
                     : Error<T>(errorFactory());
         }
@@ -260,7 +260,7 @@ public static partial class Result
         {
             ArgumentNullException.ThrowIfNull(binder);
 
-            var result = await @this;
+            var result = await @this.ConfigureAwait(false);
 
             return result.IsOk
                 ? binder(result.Value!)
@@ -272,10 +272,10 @@ public static partial class Result
         {
             ArgumentNullException.ThrowIfNull(binder);
 
-            var result = await @this;
+            var result = await @this.ConfigureAwait(false);
 
             return result.IsOk
-                ? await binder(result.Value!)
+                ? await binder(result.Value!).ConfigureAwait(false)
                 : Error<TResult>(result.ErrorsToArray());
         }
 
@@ -284,10 +284,10 @@ public static partial class Result
         {
             ArgumentNullException.ThrowIfNull(binder);
 
-            var result = await @this;
+            var result = await @this.ConfigureAwait(false);
 
             return result.IsOk
-                ? await binder(result.Value!)
+                ? await binder(result.Value!).ConfigureAwait(false)
                 : Error<TResult>(result.ErrorsToArray());
         }
 
@@ -300,7 +300,7 @@ public static partial class Result
         {
             ArgumentNullException.ThrowIfNull(mapper);
 
-            var result = await @this;
+            var result = await @this.ConfigureAwait(false);
 
             return result.IsOk
                 ? Ok(mapper(result.Value!))
@@ -312,10 +312,10 @@ public static partial class Result
         {
             ArgumentNullException.ThrowIfNull(mapper);
 
-            var result = await @this;
+            var result = await @this.ConfigureAwait(false);
 
             return result.IsOk
-                ? Ok(await mapper(result.Value!))
+                ? Ok(await mapper(result.Value!).ConfigureAwait(false))
                 : Error<TResult>(result.ErrorsToArray());
         }
 
@@ -324,10 +324,10 @@ public static partial class Result
         {
             ArgumentNullException.ThrowIfNull(mapper);
 
-            var result = await @this;
+            var result = await @this.ConfigureAwait(false);
 
             return result.IsOk
-                ? Ok(await mapper(result.Value!))
+                ? Ok(await mapper(result.Value!).ConfigureAwait(false))
                 : Error<TResult>(result.ErrorsToArray());
         }
 
@@ -342,7 +342,7 @@ public static partial class Result
             ArgumentNullException.ThrowIfNull(condition);
             ArgumentNullException.ThrowIfNull(errorFactory);
 
-            var result = await @this;
+            var result = await @this.ConfigureAwait(false);
 
             return result.IsError
                 ? result
@@ -358,11 +358,11 @@ public static partial class Result
             ArgumentNullException.ThrowIfNull(condition);
             ArgumentNullException.ThrowIfNull(errorFactory);
 
-            var result = await @this;
+            var result = await @this.ConfigureAwait(false);
 
             return result.IsError
                 ? result
-                : await condition(result.Value!)
+                : await condition(result.Value!).ConfigureAwait(false)
                     ? result
                     : Error<T>(errorFactory());
         }
@@ -374,11 +374,11 @@ public static partial class Result
             ArgumentNullException.ThrowIfNull(condition);
             ArgumentNullException.ThrowIfNull(errorFactory);
 
-            var result = await @this;
+            var result = await @this.ConfigureAwait(false);
 
             return result.IsError
                 ? result
-                : await condition(result.Value!)
+                : await condition(result.Value!).ConfigureAwait(false)
                     ? result
                     : Error<T>(errorFactory());
         }

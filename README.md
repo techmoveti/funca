@@ -83,6 +83,40 @@ Support for communication patterns and events.
 ### Shell
 Utilities and helper extensions to facilitate library usage.
 
+## 📊 Benchmarks
+
+The `benchmarks/Funca.Benchmarks` project uses [BenchmarkDotNet](https://benchmarkdotnet.org/) to measure throughput and allocations for key pipelines.
+
+### Scenarios covered
+
+| Benchmark | Description |
+|---|---|
+| `SuccessChain_MapBindEnsureMatch` | Full sync success chain (Map → Bind → Ensure → Match) |
+| `FailureChain_EarlyExit` | Sync chain with early failure — all combinators bypassed |
+| `NullableValueSuccess_IsOk` | `Result<string?>.Ok(null)` — verifies `_isSuccess` flag independence from nullability |
+| `TaskChain_Success` | Async Task success pipeline (MapAsync → BindAsync → Match) |
+| `ValueTaskChain_Success` | Async ValueTask success pipeline |
+| `TaskChain_EarlyFailure` | Async Task pipeline with early failure |
+
+### Running the benchmarks
+
+```bash
+# From the repository root
+cd benchmarks/Funca.Benchmarks
+dotnet run -c Release
+```
+
+To run a specific benchmark class:
+
+```bash
+dotnet run -c Release -- --filter *ResultSync*
+dotnet run -c Release -- --filter *ResultAsync*
+```
+
+Results are written to `BenchmarkDotNet.Artifacts/` in the benchmark project folder.
+
+---
+
 ## 📝 License
 MIT License - see [LICENSE](LICENSE) for more details.
 
