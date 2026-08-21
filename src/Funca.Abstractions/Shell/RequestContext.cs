@@ -25,9 +25,10 @@ public sealed class RequestContext
 
     public void Attach<T>(string accessKey, T valueOfT) where T : class
     {
-        _attachments
-            .Value
-            .TryAdd(accessKey, valueOfT);
+        ArgumentException.ThrowIfNullOrWhiteSpace(accessKey);
+        ArgumentNullException.ThrowIfNull(valueOfT);
+
+        _attachments.Value[accessKey] = valueOfT;
     }
 
     public Option<T> Detach<T>(string accessKey) where T : class
@@ -35,9 +36,10 @@ public sealed class RequestContext
         if (!_attachments.IsValueCreated)
             return Option.None<T>();
 
-        return
-            _attachments.Value.TryGetValue(accessKey, out var content)
-                ? Option.Some((T)content)
-                : Option.None<T>();
+        ArgumentException.ThrowIfNullOrWhiteSpace(accessKey);
+
+        return _attachments.Value.TryGetValue(accessKey, out var content) && content is T typedContent
+            ? Option.Some(typedContent)
+            : Option.None<T>();
     }
 }

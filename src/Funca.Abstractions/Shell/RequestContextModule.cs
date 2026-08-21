@@ -39,7 +39,7 @@ public static class RequestContextModule
                         @this.UserContext.Value?.UserName,
                         @this.CorrelationId.Value,
                         @event.GetType().Name,
-                        JsonSerializer.SerializeToDocument(@event)));
+                        JsonSerializer.SerializeToElement(@event)));
 
         public Result<EventEnvelopeState> WrapEvent<TEvent, TAggregate>(
             Guid aggregateId,

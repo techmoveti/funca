@@ -2,13 +2,14 @@
 
 public readonly record struct Result<T>
 {
-    public T? Value { get; init; }
+    private static readonly ErrorResult[] UninitializedErrors =
+        [ErrorResult.Failure("Result was not initialized.")];
 
+    internal readonly T? Value;
     private readonly bool _isSuccess;
-    private readonly ErrorResult? _singleError;
-    private readonly ErrorResult[]? _manyErrors;
+    private readonly ErrorResult[]? _errors;
 
-    public bool HasErrors => _singleError is not null || (_manyErrors?.Length > 0);
+    public bool HasErrors => IsError;
 
     /// <summary>
     /// Returns <c>true</c> when this result represents a successful operation.
@@ -20,65 +21,61 @@ public readonly record struct Result<T>
     public bool IsError => !_isSuccess;
 
     /// <summary>
-    /// Returns the errors as a <see cref="ReadOnlySpan{T}"/> — allocation-free for 0 and 1 error cases.
+    /// Returns a read-only view of the errors without exposing the backing storage.
     /// </summary>
-    public ReadOnlySpan<ErrorResult> Errors
-    {
-        get
-        {
-            if (_manyErrors is { Length: > 0 }) return _manyErrors;
-            if (_singleError is not null) return new[] { _singleError };
-            return [];
-        }
-    }
+    public ReadOnlySpan<ErrorResult> Errors => IsOk
+        ? []
+        : _errors ?? UninitializedErrors;
 
-    private Result(T? value, bool isSuccess, ErrorResult? singleError, ErrorResult[]? manyErrors)
+    private Result(T? value, bool isSuccess, ErrorResult[]? errors)
     {
         Value = value;
         _isSuccess = isSuccess;
-        _singleError = singleError;
-        _manyErrors = manyErrors;
+        _errors = errors;
     }
 
     /// <summary>
     /// Creates a successful result. <paramref name="value"/> may be <c>null</c> when
     /// <typeparamref name="T"/> is a nullable type — success is tracked independently.
     /// </summary>
-    public static Result<T> Wrap(T? value) => new(value, true, null, null);
+    public static Result<T> Wrap(T? value) => new(value, true, null);
 
     public static Result<T> Error(ErrorResult error)
     {
         ArgumentNullException.ThrowIfNull(error);
-        return new(default, false, error, null);
+
+        return new(default, false, [error]);
     }
 
     public static Result<T> Error(ErrorResult[] errors)
     {
         ArgumentNullException.ThrowIfNull(errors);
-        return errors.Length switch
-        {
-            0 => new(default, false, null, null),
-            1 => new(default, false, errors[0], null),
-            _ => new(default, false, null, errors)
-        };
+
+        return Error((ReadOnlySpan<ErrorResult>)errors);
     }
 
     public static Result<T> Error(ReadOnlySpan<ErrorResult> errors)
     {
-        if (errors.IsEmpty) return new(default, false, null, null);
-        if (errors.Length == 1) return new(default, false, errors[0], null);
-        return new(default, false, null, errors.ToArray());
+        if (errors.IsEmpty)
+            throw new ArgumentException("An error result must contain at least one error.", nameof(errors));
+
+        foreach (var error in errors)
+            ArgumentNullException.ThrowIfNull(error);
+
+        return new(default, false, errors.ToArray());
     }
 
     /// <summary>
-    /// Materializes errors into an array. Prefer <see cref="Errors"/> (ReadOnlySpan) when possible
-    /// to avoid the allocation in the single-error case.
+    /// Creates an independent array of errors for APIs that require an array.
     /// </summary>
-    public ErrorResult[] ErrorsToArray()
+    public ErrorResult[] ErrorsToArray() => Errors.ToArray();
+
+    internal Result<TResult> PropagateFailure<TResult>()
     {
-        if (_manyErrors is { Length: > 0 }) return _manyErrors;
-        if (_singleError is not null) return [_singleError];
-        return [];
+        if (IsOk)
+            throw new InvalidOperationException("Only failed results can be propagated.");
+
+        return new Result<TResult>(default, false, _errors);
     }
 
     public T Unwrap()

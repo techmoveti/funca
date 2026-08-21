@@ -5,17 +5,18 @@
         <EnablePreviewFeatures>true</EnablePreviewFeatures>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <Title>funca abstractions</Title>
         <Authors>https://www.techmove.com.br/</Authors>
         <Description>light and flavorful abstractions</Description>
         <PackageProjectUrl>https://github.com/techmoveti/funca</PackageProjectUrl>
         <PackageIcon>techmove-icon.png</PackageIcon>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
         <RepositoryUrl>https://github.com/techmoveti/funca</RepositoryUrl>
         <Version>2.11.2</Version>
     </PropertyGroup>
 
     <ItemGroup>
+        <None Include="README.md" Pack="true" PackagePath="\" />
         <None Update="techmove-icon.png">
             <Pack>True</Pack>
             <PackagePath></PackagePath>

@@ -14,5 +14,7 @@ public record QueryResult<T>(
     int PageSize,
     long RecordCount)
 {
-    public int PageCount { get; init; } = (int)Math.Ceiling(RecordCount / (double)PageSize);
+    public int PageCount => PageSize > 0
+        ? checked((int)Math.Ceiling(RecordCount / (double)PageSize))
+        : throw new ArgumentOutOfRangeException(nameof(PageSize), PageSize, "PageSize must be greater than zero.");
 }
