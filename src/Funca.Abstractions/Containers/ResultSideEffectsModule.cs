@@ -269,9 +269,9 @@ public static partial class Result
             ArgumentNullException.ThrowIfNull(onFailure);
 
             if (@this.IsOk)
-                await onSuccess(@this.Unwrap().ConfigureAwait(false));
+                await onSuccess(@this.Unwrap()).ConfigureAwait(false);
             else
-                await onFailure(@this.ErrorsToArray().ConfigureAwait(false));
+                await onFailure(@this.ErrorsToArray()).ConfigureAwait(false);
         }
 
         public async ValueTask MatchValueTask(
@@ -282,9 +282,9 @@ public static partial class Result
             ArgumentNullException.ThrowIfNull(onFailure);
 
             if (@this.IsOk)
-                await onSuccess(@this.Unwrap().ConfigureAwait(false));
+                await onSuccess(@this.Unwrap()).ConfigureAwait(false);
             else
-                await onFailure(@this.ErrorsToArray().ConfigureAwait(false));
+                await onFailure(@this.ErrorsToArray()).ConfigureAwait(false);
         }
     }
 
@@ -317,9 +317,9 @@ public static partial class Result
             var result = await @this.ConfigureAwait(false);
 
             if (result.IsOk)
-                await onSuccess(result.Unwrap().ConfigureAwait(false));
+                await onSuccess(result.Unwrap()).ConfigureAwait(false);
             else
-                await onFailure(result.ErrorsToArray().ConfigureAwait(false));
+                await onFailure(result.ErrorsToArray()).ConfigureAwait(false);
         }
 
         public async ValueTask MatchValueTask(
@@ -333,9 +333,9 @@ public static partial class Result
             var result = await @this.ConfigureAwait(false);
 
             if (result.IsOk)
-                await onSuccess(result.Unwrap().ConfigureAwait(false));
+                await onSuccess(result.Unwrap()).ConfigureAwait(false);
             else
-                await onFailure(result.ErrorsToArray().ConfigureAwait(false));
+                await onFailure(result.ErrorsToArray()).ConfigureAwait(false);
         }
     }
 
@@ -366,9 +366,9 @@ public static partial class Result
             var result = await @this.ConfigureAwait(false);
 
             if (result.IsOk)
-                await onSuccess(result.Unwrap().ConfigureAwait(false));
+                await onSuccess(result.Unwrap()).ConfigureAwait(false);
             else
-                await onFailure(result.ErrorsToArray().ConfigureAwait(false));
+                await onFailure(result.ErrorsToArray()).ConfigureAwait(false);
         }
 
         public async ValueTask MatchValueTask(
@@ -381,9 +381,9 @@ public static partial class Result
             var result = await @this.ConfigureAwait(false);
 
             if (result.IsOk)
-                await onSuccess(result.Unwrap().ConfigureAwait(false));
+                await onSuccess(result.Unwrap()).ConfigureAwait(false);
             else
-                await onFailure(result.ErrorsToArray().ConfigureAwait(false));
+                await onFailure(result.ErrorsToArray()).ConfigureAwait(false);
         }
     }
 }
