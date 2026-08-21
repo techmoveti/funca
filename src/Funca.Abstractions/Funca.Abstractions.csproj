@@ -12,7 +12,7 @@
         <PackageIcon>techmove-icon.png</PackageIcon>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <RepositoryUrl>https://github.com/techmoveti/funca</RepositoryUrl>
-        <Version>2.11.2</Version>
+        <Version>2.11.3</Version>
     </PropertyGroup>
 
     <ItemGroup>
