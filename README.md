@@ -3,7 +3,13 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![Language](https://img.shields.io/badge/Language-C%23-239120?logo=csharp)
 
-C# library with resources for **separation of concerns** in software, implementing **Railway Pattern** and **Option Pattern** for robust error handling and business flows.
+Biblioteca C# de abstrações para estruturar aplicações com responsabilidades explícitas e fluxos de negócio previsíveis. Ela oferece padrões e tipos reutilizáveis para separar regras de negócio, efeitos colaterais e infraestrutura, facilitando código mais testável, legível e desacoplado.
+
+## ✨ Resumo
+
+A Funca incentiva a **separação de conceitos** ao organizar contratos e utilitários em módulos como Containers, Data, Messaging e Shell. Seus tipos funcionais, como `Result<T>` e `Option<T>`, tornam sucesso, falha e ausência de valor explícitos, permitindo compor operações sem depender de exceções, verificações de `null` ou condicionais aninhadas.
+
+Esse modelo apoia o padrão **Functional Core, Imperative Shell**: mantenha as regras de negócio no núcleo funcional, determinístico e fácil de testar; concentre I/O, persistência, mensageria e demais efeitos no shell imperativo. As abstrações da biblioteca ajudam a definir as fronteiras entre esses conceitos e a conectar as camadas sem acoplá-las a implementações concretas.
 
 ## 📋 Features
 

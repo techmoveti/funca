@@ -2,7 +2,8 @@
 
 public readonly record struct Result<T>
 {
-    private static readonly ErrorResult[] UninitializedErrors =
+    // ReSharper disable once StaticMemberInGenericType
+    static private readonly ErrorResult[] UninitializedErrors =
         [ErrorResult.Failure("Result was not initialized.")];
 
     internal readonly T? Value;
@@ -44,7 +45,7 @@ public readonly record struct Result<T>
     {
         ArgumentNullException.ThrowIfNull(error);
 
-        return new(default, false, [error]);
+        return new Result<T>(default, false, [error]);
     }
 
     public static Result<T> Error(ErrorResult[] errors)
@@ -62,7 +63,7 @@ public readonly record struct Result<T>
         foreach (var error in errors)
             ArgumentNullException.ThrowIfNull(error);
 
-        return new(default, false, errors.ToArray());
+        return new Result<T>(default, false, errors.ToArray());
     }
 
     /// <summary>
