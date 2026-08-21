@@ -48,7 +48,7 @@ public static partial class Result
 
             return @this.IsOk
                 ? binder(@this.Value!)
-                : Error<TResult>(@this.Errors);
+                : @this.PropagateFailure<TResult>();
         }
 
         public Result<TResult> Map<TResult>(Func<T, TResult> mapper)
@@ -57,7 +57,7 @@ public static partial class Result
 
             return @this.IsOk
                 ? Ok(mapper(@this.Value!))
-                : Error<TResult>(@this.Errors);
+                : @this.PropagateFailure<TResult>();
         }
 
         public TResult Match<TResult>(Func<T, TResult> onSuccess, Func<ErrorResult[], TResult> onFailure)

@@ -25,4 +25,4 @@ public record EventEnvelopeState(
     string? ActorName,
     string? CorrelationId,
     string EventType,
-    JsonDocument Payload) : IState, IRequireTenantPartition;
+    JsonElement Payload) : IState, IRequireTenantPartition;

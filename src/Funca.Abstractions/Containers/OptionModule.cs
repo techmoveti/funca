@@ -19,7 +19,7 @@ public static partial class Option
         // =========================
 
         public Result<T> ToResult() =>
-            @this.ToResult(ErrorResult.Empty);
+            @this.ToResult(ErrorResult.Failure("Option does not contain a value."));
 
         public Result<T> ToResult(ErrorResult error)
         {

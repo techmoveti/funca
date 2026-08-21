@@ -1,6 +1,6 @@
 ﻿namespace Funca.Abstractions.Containers;
 
-public record ErrorResult(string? Key, ErrorType Type, string Message)
+public sealed record ErrorResult(string? Key, ErrorType Type, string Message)
 {
     public static readonly ErrorResult Empty = new(string.Empty, ErrorType.Failure, string.Empty);
 

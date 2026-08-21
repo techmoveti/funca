@@ -2,17 +2,25 @@
 
 public readonly record struct Option<T>
 {
-    public T? Value { get; init; }
+    private readonly bool _isSome;
 
-    public bool IsSome => Value is not null;
+    public T? Value { get; }
+
+    public bool IsSome => _isSome;
 
     public bool IsNone => !IsSome;
 
     public static Option<T> Some(T value) => value is null
         ? throw new ArgumentNullException(nameof(value))
-        : new Option<T> { Value = value };
+        : new Option<T>(value, true);
 
-    public static Option<T> None() => new();
+    public static Option<T> None() => new(default, false);
+
+    private Option(T? value, bool isSome)
+    {
+        Value = value;
+        _isSome = isSome;
+    }
 
     public T Unwrap() => IsNone ? throw new InvalidOperationException("Option has no value.") : Value!;
 

@@ -12,22 +12,22 @@ public interface IQueryStore<TState, TKey>
 
     Task<Option<TModel>> GetProjectedAsync<TModel>(
         TKey id,
-        Func<TState, TModel> projection,
+        Expression<Func<TState, TModel>> projection,
         CancellationToken token);
 
-    Task<IEnumerable<TState>> GetManyAsync(TKey[] ids, CancellationToken token);
+    Task<IReadOnlyList<TState>> GetManyAsync(IReadOnlyCollection<TKey> ids, CancellationToken token);
 
     Task<IEnumerable<TModel>> GetManyProjectedAsync<TModel>(
-        TKey[] ids,
-        Func<TState, TModel> projection,
+        IReadOnlyCollection<TKey> ids,
+        Expression<Func<TState, TModel>> projection,
         CancellationToken token);
 
-    Task<QueryResult<IEnumerable<TState>>> GetManyAsync(
+    Task<QueryResult<IReadOnlyList<TState>>> GetManyAsync(
         Query<TState, TKey> query,
         CancellationToken token);
 
-    Task<QueryResult<IEnumerable<TModel>>> GetManyProjectedAsync<TModel>(
+    Task<QueryResult<IReadOnlyList<TModel>>> GetManyProjectedAsync<TModel>(
         Query<TState, TKey> query,
-        Func<TState, TModel> projection,
+        Expression<Func<TState, TModel>> projection,
         CancellationToken token);
 }

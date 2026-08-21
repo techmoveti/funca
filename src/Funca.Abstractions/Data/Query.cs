@@ -14,7 +14,15 @@ public abstract record Query
     public string? SortBy { get; init; }
     public QueryOrder? OrderType { get; init; } = QueryOrder.None;
 
-    public int Skip() => PageSize * (Page - 1);
+    public int Skip()
+    {
+        if (Page < 1)
+            throw new ArgumentOutOfRangeException(nameof(Page), Page, "Page must be greater than zero.");
+        if (PageSize < 1)
+            throw new ArgumentOutOfRangeException(nameof(PageSize), PageSize, "PageSize must be greater than zero.");
+
+        return checked(PageSize * (Page - 1));
+    }
 }
 
 public abstract record Query<TState, TKey> : Query
