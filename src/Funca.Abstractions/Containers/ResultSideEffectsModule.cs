@@ -33,7 +33,7 @@ public static partial class Result
                 Result<T> result,
                 Func<T, Task> action)
             {
-                await action(result.Value!);
+                await action(result.Value!).ConfigureAwait(false);
 
                 return result;
             }
@@ -52,7 +52,7 @@ public static partial class Result
                 Result<T> result,
                 Func<T, ValueTask> action)
             {
-                await action(result.Value!);
+                await action(result.Value!).ConfigureAwait(false);
 
                 return result;
             }
@@ -99,7 +99,7 @@ public static partial class Result
                 Result<T> result,
                 Func<T, Task> action)
             {
-                await action(result.Value!);
+                await action(result.Value!).ConfigureAwait(false);
 
                 return result;
             }
@@ -118,7 +118,7 @@ public static partial class Result
                 Result<T> result,
                 Func<T, ValueTask> action)
             {
-                await action(result.Value!);
+                await action(result.Value!).ConfigureAwait(false);
 
                 return result;
             }
@@ -136,7 +136,7 @@ public static partial class Result
             ArgumentNullException.ThrowIfNull(@this);
             ArgumentNullException.ThrowIfNull(action);
 
-            var result = await @this;
+            var result = await @this.ConfigureAwait(false);
 
             if (result.IsError)
                 return result;
@@ -155,12 +155,12 @@ public static partial class Result
             ArgumentNullException.ThrowIfNull(@this);
             ArgumentNullException.ThrowIfNull(action);
 
-            var result = await @this;
+            var result = await @this.ConfigureAwait(false);
 
             if (result.IsError)
                 return result;
 
-            await action(result.Value!);
+            await action(result.Value!).ConfigureAwait(false);
 
             return result;
         }
@@ -174,12 +174,12 @@ public static partial class Result
             ArgumentNullException.ThrowIfNull(@this);
             ArgumentNullException.ThrowIfNull(action);
 
-            var result = await @this;
+            var result = await @this.ConfigureAwait(false);
 
             if (result.IsError)
                 return result;
 
-            await action(result.Value!);
+            await action(result.Value!).ConfigureAwait(false);
 
             return result;
         }
@@ -195,7 +195,7 @@ public static partial class Result
         {
             ArgumentNullException.ThrowIfNull(action);
 
-            var result = await @this;
+            var result = await @this.ConfigureAwait(false);
 
             if (result.IsError)
                 return result;
@@ -213,12 +213,12 @@ public static partial class Result
         {
             ArgumentNullException.ThrowIfNull(action);
 
-            var result = await @this;
+            var result = await @this.ConfigureAwait(false);
 
             if (result.IsError)
                 return result;
 
-            await action(result.Value!);
+            await action(result.Value!).ConfigureAwait(false);
 
             return result;
         }
@@ -231,12 +231,12 @@ public static partial class Result
         {
             ArgumentNullException.ThrowIfNull(action);
 
-            var result = await @this;
+            var result = await @this.ConfigureAwait(false);
 
             if (result.IsError)
                 return result;
 
-            await action(result.Value!);
+            await action(result.Value!).ConfigureAwait(false);
 
             return result;
         }
@@ -269,9 +269,9 @@ public static partial class Result
             ArgumentNullException.ThrowIfNull(onFailure);
 
             if (@this.IsOk)
-                await onSuccess(@this.Unwrap());
+                await onSuccess(@this.Unwrap().ConfigureAwait(false));
             else
-                await onFailure(@this.ErrorsToArray());
+                await onFailure(@this.ErrorsToArray().ConfigureAwait(false));
         }
 
         public async ValueTask MatchValueTask(
@@ -282,9 +282,9 @@ public static partial class Result
             ArgumentNullException.ThrowIfNull(onFailure);
 
             if (@this.IsOk)
-                await onSuccess(@this.Unwrap());
+                await onSuccess(@this.Unwrap().ConfigureAwait(false));
             else
-                await onFailure(@this.ErrorsToArray());
+                await onFailure(@this.ErrorsToArray().ConfigureAwait(false));
         }
     }
 
@@ -298,7 +298,7 @@ public static partial class Result
             ArgumentNullException.ThrowIfNull(onSuccess);
             ArgumentNullException.ThrowIfNull(onFailure);
 
-            var result = await @this;
+            var result = await @this.ConfigureAwait(false);
 
             if (result.IsOk)
                 onSuccess(result.Unwrap());
@@ -314,12 +314,12 @@ public static partial class Result
             ArgumentNullException.ThrowIfNull(onSuccess);
             ArgumentNullException.ThrowIfNull(onFailure);
 
-            var result = await @this;
+            var result = await @this.ConfigureAwait(false);
 
             if (result.IsOk)
-                await onSuccess(result.Unwrap());
+                await onSuccess(result.Unwrap().ConfigureAwait(false));
             else
-                await onFailure(result.ErrorsToArray());
+                await onFailure(result.ErrorsToArray().ConfigureAwait(false));
         }
 
         public async ValueTask MatchValueTask(
@@ -330,12 +330,12 @@ public static partial class Result
             ArgumentNullException.ThrowIfNull(onSuccess);
             ArgumentNullException.ThrowIfNull(onFailure);
 
-            var result = await @this;
+            var result = await @this.ConfigureAwait(false);
 
             if (result.IsOk)
-                await onSuccess(result.Unwrap());
+                await onSuccess(result.Unwrap().ConfigureAwait(false));
             else
-                await onFailure(result.ErrorsToArray());
+                await onFailure(result.ErrorsToArray().ConfigureAwait(false));
         }
     }
 
@@ -348,7 +348,7 @@ public static partial class Result
             ArgumentNullException.ThrowIfNull(onSuccess);
             ArgumentNullException.ThrowIfNull(onFailure);
 
-            var result = await @this;
+            var result = await @this.ConfigureAwait(false);
 
             if (result.IsOk)
                 onSuccess(result.Unwrap());
@@ -363,12 +363,12 @@ public static partial class Result
             ArgumentNullException.ThrowIfNull(onSuccess);
             ArgumentNullException.ThrowIfNull(onFailure);
 
-            var result = await @this;
+            var result = await @this.ConfigureAwait(false);
 
             if (result.IsOk)
-                await onSuccess(result.Unwrap());
+                await onSuccess(result.Unwrap().ConfigureAwait(false));
             else
-                await onFailure(result.ErrorsToArray());
+                await onFailure(result.ErrorsToArray().ConfigureAwait(false));
         }
 
         public async ValueTask MatchValueTask(
@@ -378,12 +378,12 @@ public static partial class Result
             ArgumentNullException.ThrowIfNull(onSuccess);
             ArgumentNullException.ThrowIfNull(onFailure);
 
-            var result = await @this;
+            var result = await @this.ConfigureAwait(false);
 
             if (result.IsOk)
-                await onSuccess(result.Unwrap());
+                await onSuccess(result.Unwrap().ConfigureAwait(false));
             else
-                await onFailure(result.ErrorsToArray());
+                await onFailure(result.ErrorsToArray().ConfigureAwait(false));
         }
     }
 }

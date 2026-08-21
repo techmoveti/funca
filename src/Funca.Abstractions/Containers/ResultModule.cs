@@ -33,11 +33,11 @@ public static partial class Result
         ArgumentNullException.ThrowIfNull(onSuccess);
         ArgumentNullException.ThrowIfNull(onFailure);
 
-        var result = await @this;
+        var result = await @this.ConfigureAwait(false);
 
         return result.IsOk
-            ? await onSuccess(result.Unwrap())
-            : await onFailure(result.ErrorsToArray());
+            ? await onSuccess(result.Unwrap()).ConfigureAwait(false)
+            : await onFailure(result.ErrorsToArray()).ConfigureAwait(false);
     }
 
     extension<T>(Result<T> @this)
