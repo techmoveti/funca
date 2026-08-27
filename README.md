@@ -68,7 +68,7 @@ using Funca.Abstractions;
 
 var value = GetOptionalValue()
     .Map(v => TransformValue(v))
-    .FlatMap(v => GetAnotherOption(v))
+    .Map(v => GetAnotherOption(v))
     .Match(
         some => ProcessValue(some),
         () => HandleNone()
