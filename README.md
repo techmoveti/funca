@@ -13,7 +13,7 @@ Esse modelo apoia o padrão **Functional Core, Imperative Shell**: mantenha as r
 
 ## 📋 Features
 
-### 🏗️ Clean Architecture
+### 🏗️ Architecture
 - **Separation of Concerns**: Well-defined abstractions to keep code organized and testable
 - **Modular Structure**: Organization by domains (Containers, Data, Messaging, Shell)
 - **SOLID Principles**: Implementation of recommended interfaces and patterns
