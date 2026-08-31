@@ -39,7 +39,7 @@ public readonly record struct Result<T>
     /// Creates a successful result. <paramref name="value"/> may be <c>null</c> when
     /// <typeparamref name="T"/> is a nullable type — success is tracked independently.
     /// </summary>
-    public static Result<T> Wrap(T? value) => new(value, true, null);
+    public static Result<T> Wrap(T value) => new(value, true, null);
 
     public static Result<T> Error(ErrorResult error)
     {
