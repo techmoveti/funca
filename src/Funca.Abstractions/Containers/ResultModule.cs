@@ -6,7 +6,7 @@ public static partial class Result
 
     public static Result<T> Error<T>(string errorMessage)
         => Result<T>.Error(
-            ErrorResult.Validation(errorMessage ?? throw new ArgumentNullException(nameof(errorMessage))));
+            ErrorResult.Invalid(errorMessage ?? throw new ArgumentNullException(nameof(errorMessage))));
 
     public static Result<T> Error<T>(ErrorResult error)
     {

@@ -23,7 +23,7 @@ public sealed class ResultTests
     [Fact]
     public void Error_does_not_retain_or_expose_the_caller_array()
     {
-        var original = ErrorResult.Validation("original");
+        var original = ErrorResult.Invalid("original");
         var input = new[] { original };
         var result = Result<int>.Error(input);
 
@@ -37,7 +37,7 @@ public sealed class ResultTests
     [Fact]
     public void Failed_result_is_propagated_without_changing_its_error()
     {
-        var error = ErrorResult.Validation("invalid value");
+        var error = ErrorResult.Invalid("invalid value");
         var result = Result<int>.Error(error);
 
         var mapped = result.Map(value => value.ToString());

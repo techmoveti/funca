@@ -17,7 +17,7 @@ public static class GuidModule
     public static Result<Guid> ToGuid(this string guidString)
         => Guid.TryParse(guidString, out var guid)
             ? Result.Ok(guid)
-            : ErrorResult.Validation($"'{guidString}' is not a valid GUID.");
+            : ErrorResult.Invalid($"'{guidString}' is not a valid GUID.");
 
     /// <summary>
     ///     String to Guid.
@@ -28,5 +28,5 @@ public static class GuidModule
     public static Result<Guid> ToGuid(this string guidString, string errorMessage)
         => Guid.TryParse(guidString, out var guid)
             ? Result.Ok(guid)
-            : ErrorResult.Validation(errorMessage);
+            : ErrorResult.Invalid(errorMessage);
 }

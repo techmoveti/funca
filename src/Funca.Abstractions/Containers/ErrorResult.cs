@@ -14,9 +14,9 @@ public sealed record ErrorResult(string? Key, ErrorType Type, string Message)
 
     public static ErrorResult Failure(string message = "failure") => Create(ErrorType.Failure, message);
 
-    public static ErrorResult Validation(string message) => Create(ErrorType.Validation, message);
+    public static ErrorResult Invalid(string message) => Create(ErrorType.Invalid, message);
 
-    public static ErrorResult Validation(string key, string message) => Create(key, ErrorType.Validation, message);
+    public static ErrorResult Invalid(string key, string message) => Create(key, ErrorType.Invalid, message);
 
     public static ErrorResult NotFound(string message = "not found") => Create(ErrorType.NotFound, message);
 
