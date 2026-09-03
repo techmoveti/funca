@@ -2,7 +2,9 @@
 
 Abstrações leves para aplicações .NET que seguem um desenho funcional no núcleo e uma shell imperativa nas bordas.
 
-O pacote entrega containers para modelar sucesso, falha e ausência de valor sem depender de exceções como fluxo principal, além de contratos para casos de uso, mensageria, consultas, event sourcing, multi-tenant e metadados customizáveis.
+O pacote entrega containers para modelar sucesso, falha e ausência de valor sem depender de exceções como fluxo
+principal, além de contratos para casos de uso, mensageria, consultas, event sourcing, multi-tenant e metadados
+customizáveis.
 
 ## Instalação
 
@@ -77,7 +79,8 @@ public sealed class CreateOrderInteractor : IInteractor<CreateOrderCommand, Crea
 
 - `IEvent` para eventos com `Timestamp`.
 - `IEventStore` para append e leitura de envelopes de eventos.
-- `EventEnvelopeState` com dados de sequência, versão, tenant, agregado, ator, correlação, tipo do evento e payload JSON.
+- `EventEnvelopeState` com dados de sequência, versão, tenant, agregado, ator, correlação, tipo do evento e payload
+  JSON.
 - `TenantId` e `IRequireTenantPartition` para contratos que exigem particionamento por tenant.
 - Extensões em `RequestContext` para definir tenant e envelopar eventos com contexto de usuário e correlação.
 
@@ -90,16 +93,19 @@ public sealed class CreateOrderInteractor : IInteractor<CreateOrderCommand, Crea
 
 - `FieldMetadata<TState>` e `IStateMetadata<TState>` para descrever campos de um estado.
 - `FieldType` para tipos comuns de campo: texto, inteiro, decimal, booleano, data, seleção única e múltipla.
-- `CustomFieldMetadata`, `FieldId`, `IHaveCustomData` e `CustomData` para cenários com campos customizados por tenant e entidade.
+- `CustomFieldMetadata`, `FieldId`, `IHaveCustomData` e `CustomData` para cenários com campos customizados por tenant e
+  entidade.
 - `MetadataModule.Field(...)` para criar metadados de campo de forma concisa.
 
 ## Invariantes importantes
 
 - Todo `Result<T>` em estado de erro carrega pelo menos um `ErrorResult` não nulo.
 - Coleções de erro são copiadas na criação e na materialização, impedindo mutação externa do resultado depois de criado.
-- `Result<T>.IsOk` independe de `T` ser nullable ou do valor interno ser `null`; o estado de sucesso é controlado por uma flag explícita.
+- `Result<T>.IsOk` independe de `T` ser nullable ou do valor interno ser `null`; o estado de sucesso é controlado por
+  uma flag explícita.
 - `Option<T>.Some(...)` não aceita valor `null`; use `Option.From(value)` quando quiser converter `null` em `None`.
 
 ## Quando usar
 
-Use `Funca.Abstractions` para separar regras de negócio puras de detalhes de infraestrutura, deixando erros, ausência de valor, consultas, eventos, mensagens e contexto de requisição com contratos pequenos e consistentes.
+Use `Funca.Abstractions` para separar regras de negócio puras de detalhes de infraestrutura, deixando erros, ausência de
+valor, consultas, eventos, mensagens e contexto de requisição com contratos pequenos e consistentes.

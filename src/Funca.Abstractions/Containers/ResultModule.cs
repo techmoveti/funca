@@ -4,6 +4,8 @@ public static partial class Result
 {
     public static Result<T> Ok<T>(T value) => Result<T>.Wrap(value);
 
+    public static Result<T> Of<T>(T value) => Result<T>.Wrap(value);
+
     public static Result<T> Error<T>(string errorMessage)
         => Result<T>.Error(
             ErrorResult.Invalid(errorMessage ?? throw new ArgumentNullException(nameof(errorMessage))));
