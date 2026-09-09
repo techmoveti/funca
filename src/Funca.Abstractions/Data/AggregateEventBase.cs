@@ -2,7 +2,7 @@ namespace Funca.Abstractions.Data;
 
 public abstract class AggregateEventBase<TState>(TState state) : IAggregateEvent<TState> where TState : IState
 {
-    public TState State { get; } = state;
+    public TState State { get; protected set; } = state;
 
     private readonly List<IEvent> _uncommittedEvents = [];
 
