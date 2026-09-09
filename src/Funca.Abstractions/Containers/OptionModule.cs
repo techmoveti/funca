@@ -14,10 +14,6 @@ public static partial class Option
 
     extension<T>(Option<T> @this)
     {
-        // =========================
-        // Result
-        // =========================
-
         public Result<T> ToResult() =>
             @this.ToResult(ErrorResult.Failure("Option does not contain a value."));
 

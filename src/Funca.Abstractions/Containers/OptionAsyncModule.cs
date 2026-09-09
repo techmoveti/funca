@@ -4,10 +4,6 @@ public static partial class Option
 {
     extension<T>(Option<T> @this)
     {
-        // =========================
-        // ToResult
-        // =========================
-
         public Task<Result<T>> ToResult(
             Func<T, Task<Result<T>>> onSome,
             Func<Task<Result<T>>> onNone)

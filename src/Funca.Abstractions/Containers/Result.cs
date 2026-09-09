@@ -41,19 +41,9 @@ public readonly record struct Result<T>
     /// </summary>
     public static Result<T> Wrap(T value) => new(value, true, null);
 
-    public static Result<T> Error(ErrorResult error)
-    {
-        ArgumentNullException.ThrowIfNull(error);
+    public static Result<T> Error(ErrorResult error) => new(default, false, [error]);
 
-        return new Result<T>(default, false, [error]);
-    }
-
-    public static Result<T> Error(ErrorResult[] errors)
-    {
-        ArgumentNullException.ThrowIfNull(errors);
-
-        return Error((ReadOnlySpan<ErrorResult>)errors);
-    }
+    public static Result<T> Error(ErrorResult[] errors) => Error((ReadOnlySpan<ErrorResult>)errors);
 
     public static Result<T> Error(ReadOnlySpan<ErrorResult> errors)
     {

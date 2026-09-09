@@ -81,25 +81,25 @@ public sealed class ResultBuilder
     }
 
     /// <summary>
-    ///     Get object validated.
+    ///     Get validated object.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException"></exception>
-    public T GetObject<T>()
+    public T Get<T>()
     {
         var typeName = typeof(T).Name;
 
-        return GetObject<T>(typeName);
+        return Get<T>(typeName);
     }
 
     /// <summary>
-    ///     Get object validated.
+    ///     Get validated object.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException"></exception>
-    public T GetObject<T>(string alias)
+    public T Get<T>(string alias)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(alias);
 

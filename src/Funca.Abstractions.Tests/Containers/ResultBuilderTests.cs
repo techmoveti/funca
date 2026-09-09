@@ -10,7 +10,7 @@ public sealed class ResultBuilderTests
         var result = new ResultBuilder()
             .Add(Result.Ok(10))
             .Add("Name", Result.Ok("funca"))
-            .Build(builder => $"{builder.GetObject<int>()}:{builder.GetObject<string>("Name")}");
+            .Build(builder => $"{builder.Get<int>()}:{builder.Get<string>("Name")}");
 
         Assert.True(result.IsOk);
         Assert.Equal("10:funca", result.Unwrap());
@@ -43,7 +43,7 @@ public sealed class ResultBuilderTests
     {
         var result = new ResultBuilder()
             .Add("Numbers", [Result.Ok(1), Result.Ok(2), Result.Ok(3)])
-            .Build(builder => builder.GetObject<IEnumerable<int>>("Numbers").Sum());
+            .Build(builder => builder.Get<IEnumerable<int>>("Numbers").Sum());
 
         Assert.True(result.IsOk);
         Assert.Equal(6, result.Unwrap());
