@@ -1,6 +1,6 @@
 namespace Funca.Abstractions.Data;
 
-public interface IAggregateEvent<TState> : IAggregate<TState> where TState : IState
+public interface IAggregateEvent<out TState> : IAggregate where TState : IState
 {
     /// <summary>
     /// Try to get State snapshot.

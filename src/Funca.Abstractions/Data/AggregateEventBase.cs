@@ -10,8 +10,8 @@ public abstract class AggregateEventBase<TState> : IAggregateEvent<TState> where
 
     public TState Snapshot =>
         State.Match(
-            onSome: some => some,
-            onNone: () => throw new InvalidOperationException("Aggregate has no state."));
+            some => some,
+            () => throw new InvalidOperationException("Aggregate has no state."));
 
     public Option<TState> State { get; protected set; }
 
