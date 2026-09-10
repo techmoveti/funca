@@ -1,6 +1,6 @@
 namespace Funca.Abstractions.Data;
 
-public interface IAggregate<out TState> where TState : IState
+public interface IAggregate<TState> where TState : IState
 {
-    TState State { get; }
+    Option<TState> State { get; }
 }

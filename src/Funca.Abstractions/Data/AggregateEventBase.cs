@@ -1,8 +1,19 @@
 namespace Funca.Abstractions.Data;
 
-public abstract class AggregateEventBase<TState>(TState state) : IAggregateEvent<TState> where TState : IState
+public abstract class AggregateEventBase<TState> : IAggregateEvent<TState> where TState : IState
 {
-    public TState State { get; protected set; } = state;
+    protected AggregateEventBase()
+        => State = Option.None<TState>();
+
+    protected AggregateEventBase(TState state)
+        => State = Option.Some(state);
+
+    public TState Snapshot =>
+        State.Match(
+            onSome: some => some,
+            onNone: () => throw new InvalidOperationException("Aggregate has no state."));
+
+    public Option<TState> State { get; protected set; }
 
     private readonly List<IEvent> _uncommittedEvents = [];
 
