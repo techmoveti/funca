@@ -13,6 +13,13 @@ public sealed class ResultBuilder
     public bool IsValid { get; private set; } = true;
 
     /// <summary>
+    ///     Start the ResultBuilder flow.
+    /// </summary>
+    /// <returns></returns>
+    public static ResultBuilder Combine()
+        => new();
+
+    /// <summary>
     ///     Add Result object.
     /// </summary>
     /// <typeparam name="T"></typeparam>
