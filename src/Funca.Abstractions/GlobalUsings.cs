@@ -4,3 +4,4 @@ global using System.Linq.Expressions;
 global using System.Text.Json;
 global using Funca.Abstractions.Containers;
 global using Funca.Abstractions.Shell;
+global using Microsoft.EntityFrameworkCore;

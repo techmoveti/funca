@@ -6,7 +6,8 @@
 /// <typeparam name="TState"></typeparam>
 /// <typeparam name="TKey"></typeparam>
 public interface IQueryStore<TState, TKey>
-    where TState : class, IState<TKey> where TKey : notnull
+    where TState : class, IState<TKey>
+    where TKey : notnull
 {
     Task<Option<TState>> GetAsync(TKey id, CancellationToken token);
 
