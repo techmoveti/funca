@@ -57,6 +57,13 @@ public static partial class Result
                 : predicate(@this.Value!)
                     ? @this
                     : Error<T>(errorFactory(@this.Value!));
+        
+        public Result<T> Ensure(Func<T, bool> condition, string message)
+            => @this.IsError
+                ? @this
+                : condition(@this.Value!)
+                    ? @this
+                    : Error<T>(message);        
 
         public Result<T> Ensure(Func<T, bool> condition, Func<ErrorResult> errorFactory)
             => @this.IsError
