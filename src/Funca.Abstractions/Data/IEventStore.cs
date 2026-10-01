@@ -2,6 +2,8 @@
 
 /// <summary>
 ///     Event data store - Imperative Shell for event sourcing.
+///     Sequence generation belongs to the application or database mapping.
+///     Aggregate version uniqueness must be enforced by database indexes.
 /// </summary>
 public interface IEventStore
 {

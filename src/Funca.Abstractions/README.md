@@ -72,7 +72,7 @@ public sealed class CreateOrderInteractor : IInteractor<CreateOrderCommand, Crea
 - `Query<TState, TKey>` com paginação, ordenação e ponto de extensão para filtros via `IQueryable<TState>`.
 - `QueryResult<T>` com cálculo de quantidade de páginas.
 - `IQueryStore<TState, TKey>` para consultas por id, lote, projeção e paginação.
-- `IUnitOfWork` para confirmação de mudanças.
+- EF e MongoDB expõem os recursos nativos para gravação; não há uma abstração genérica de escrita.
 - `GuidModule.Sequential()` para criação de GUID v7 e `ToGuid()` para parse seguro retornando `Result<Guid>`.
 
 ### Event sourcing e multi-tenancy
@@ -83,6 +83,28 @@ public sealed class CreateOrderInteractor : IInteractor<CreateOrderCommand, Crea
   JSON.
 - `TenantId` e `IRequireTenantPartition` para contratos que exigem particionamento por tenant.
 - Extensões em `RequestContext` para definir tenant e envelopar eventos com contexto de usuário e correlação.
+
+### Configuração dos stores
+
+- `EFQueryStore` e as leituras de `EFEventStore` não rastreiam entidades. Para alterações, use o contexto EF
+  diretamente.
+- Na paginação, os stores aplicam `SortBy`/`OrderType` e desempate por `Id`. Sem `SortBy`, preservam a ordenação de
+  `Query.Apply`, acrescentando `Id`; se não houver ordenação, usam `Id`.
+- Os novos overloads dos stores recebem `TenantId?`. Em bancos/coleções compartilhados, informe o tenant corrente
+  em todos os stores. Sem esse argumento, as consultas não são isoladas por tenant, permitindo bancos dedicados.
+  O EF precisa mapear `TenantId` para permitir comparação no banco, por exemplo com um value converter.
+- O overload de `MongoQueryStore` recebe conexão, coleção, sessão e tenant. A sessão deve pertencer à conexão
+  fornecida e continuar válida durante toda a consulta, inclusive durante a enumeração dos eventos.
+- Os event stores rejeitam envelopes de outro tenant quando um tenant é informado.
+- `MongoEventStore.EnsureIndexesAsync` deve ser chamado na inicialização. O índice único por tenant, tipo, agregado
+  e versão pressupõe um evento por versão. Configure a mesma restrição no modelo/migração EF. Se um comando produzir
+  vários eventos, atribua uma versão diferente a cada evento ou desabilite essa unicidade e defina outra chave.
+- `AppendAsync` não gera `Sequence`. A aplicação ou o mapeamento do banco deve fornecer uma sequência crescente e
+  única no escopo consumido por `LoadFromSequenceAsync`. Um índice único de versão impede duplicatas, mas não valida
+  a versão esperada nem impede lacunas; essa validação pertence ao fluxo de gravação e à transação.
+- `LoadFromSequenceAsync` inclui a sequência informada (`>=`); o consumidor deve tratar a repetição do último evento.
+- `IStateSnapshot.Version` indica o último evento incorporado; `SnapshotAt` é `DateTimeOffset` somente para leitura
+  no contrato. O estado concreto também deve identificar o agregado e, quando aplicável, o tenant.
 
 ### Mensageria
 

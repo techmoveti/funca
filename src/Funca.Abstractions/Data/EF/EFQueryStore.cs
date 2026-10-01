@@ -6,18 +6,26 @@ public class EFQueryStore<TDataContext, TState, TKey> : IQueryStore<TState, TKey
     where TKey : notnull
 {
     protected readonly DbContext DataContext;
+    private readonly TenantId? _tenantId;
 
     protected EFQueryStore(TDataContext dataContext)
+        : this(dataContext, null)
     {
-        if (dataContext is DbContext specializedContext)
-            DataContext = specializedContext;
-        else
-            throw new ArgumentException("Invalid Data Context");
     }
+
+    protected EFQueryStore(TDataContext dataContext, TenantId? tenantId)
+    {
+        ArgumentNullException.ThrowIfNull(dataContext);
+        DataContext = dataContext;
+        _tenantId = tenantId;
+    }
+
+    private IQueryable<TState> States => TenantQuery.Apply(
+        DataContext.Set<TState>().AsNoTracking(), _tenantId);
 
     public async Task<Option<TState>> GetAsync(TKey id, CancellationToken token)
     {
-        var state = await DataContext.FindAsync<TState>([id], token);
+        var state = await States.Where(p => p.Id.Equals(id)).FirstOrDefaultAsync(token);
 
         return state is null
             ? Option<TState>.None()
@@ -29,19 +37,20 @@ public class EFQueryStore<TDataContext, TState, TKey> : IQueryStore<TState, TKey
         Expression<Func<TState, TModel>> projection,
         CancellationToken token)
     {
-        var model = await DataContext.Set<TState>()
+        var models = await States
             .Where(p => p.Id!.Equals(id))
+            .Take(1)
             .Select(projection)
-            .FirstOrDefaultAsync(token);
+            .ToListAsync(token);
 
-        return model is null
+        return models.Count == 0 || models[0] is null
             ? Option<TModel>.None()
-            : Option<TModel>.Some(model);
+            : Option<TModel>.Some(models[0]);
     }
 
     public async Task<IReadOnlyList<TState>> GetManyAsync(IReadOnlyCollection<TKey> ids, CancellationToken token)
     {
-        return await DataContext.Set<TState>()
+        return await States
             .Where(p => ids.Contains(p.Id))
             .ToListAsync(token);
     }
@@ -51,7 +60,7 @@ public class EFQueryStore<TDataContext, TState, TKey> : IQueryStore<TState, TKey
         Expression<Func<TState, TModel>> projection,
         CancellationToken token)
     {
-        return await DataContext.Set<TState>()
+        return await States
             .Where(p => ids.Contains(p.Id))
             .Select(projection)
             .ToListAsync(token);
@@ -61,10 +70,11 @@ public class EFQueryStore<TDataContext, TState, TKey> : IQueryStore<TState, TKey
         Query<TState, TKey> query,
         CancellationToken token)
     {
-        var filter = query.Apply(DataContext.Set<TState>());
+        var skip = query.Skip();
+        var filter = query.Apply(States);
         var count = await filter.LongCountAsync(token);
-        var data = await filter
-            .Skip(query.Skip())
+        var data = await query.ApplyOrdering(filter)
+            .Skip(skip)
             .Take(query.PageSize)
             .ToListAsync(token);
 
@@ -77,10 +87,11 @@ public class EFQueryStore<TDataContext, TState, TKey> : IQueryStore<TState, TKey
         Expression<Func<TState, TModel>> projection,
         CancellationToken token)
     {
-        var filter = query.Apply(DataContext.Set<TState>());
+        var skip = query.Skip();
+        var filter = query.Apply(States);
         var count = await filter.LongCountAsync(token);
-        var data = await filter
-            .Skip(query.Skip())
+        var data = await query.ApplyOrdering(filter)
+            .Skip(skip)
             .Take(query.PageSize)
             .Select(projection)
             .ToListAsync(token);

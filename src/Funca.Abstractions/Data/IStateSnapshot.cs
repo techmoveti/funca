@@ -5,6 +5,8 @@ namespace Funca.Abstractions.Data;
 /// </summary>
 public interface IStateSnapshot
 {
+    /// <summary>The last event version incorporated into this snapshot.</summary>
     int Version { get; }
-    public DateTime SnapshotAt { get; set; }
+
+    DateTimeOffset SnapshotAt { get; }
 }

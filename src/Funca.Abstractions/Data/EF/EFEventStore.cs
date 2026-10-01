@@ -6,19 +6,32 @@ public class EFEventStore<TDataContext> : IEventStore
     where TDataContext : DbContext, IDataContext
 {
     protected readonly DbContext DataContext;
+    private readonly TenantId? _tenantId;
 
     public EFEventStore(TDataContext dataContext)
+        : this(dataContext, null)
     {
-        if (dataContext is DbContext specializedContext)
-            DataContext = specializedContext;
-        else
-            throw new ArgumentException("Invalid Data Context");
     }
+
+    public EFEventStore(TDataContext dataContext, TenantId? tenantId)
+    {
+        ArgumentNullException.ThrowIfNull(dataContext);
+        DataContext = dataContext;
+        _tenantId = tenantId;
+    }
+
+    private IQueryable<EventEnvelopeState> Events => TenantQuery.Apply(
+        DataContext.Set<EventEnvelopeState>().AsNoTracking(), _tenantId);
 
     public async ValueTask<EventEnvelopeState> AppendAsync(
         EventEnvelopeState envelope,
         CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(envelope);
+
+        if (_tenantId is { } tenant && envelope.TenantId != tenant)
+            throw new ArgumentException("The event belongs to a different tenant.", nameof(envelope));
+
         var entry = await DataContext.Set<EventEnvelopeState>()
             .AddAsync(envelope, cancellationToken);
 
@@ -32,7 +45,7 @@ public class EFEventStore<TDataContext> : IEventStore
         Guid aggregateId,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        var query = DataContext.Set<EventEnvelopeState>()
+        var query = Events
             .Where(p => p.AggregateType == aggregateType && p.AggregateId == aggregateId)
             .OrderBy(p => p.Version)
             .ThenBy(p => p.Sequence);
@@ -45,7 +58,7 @@ public class EFEventStore<TDataContext> : IEventStore
         long sequence,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        var query = DataContext.Set<EventEnvelopeState>()
+        var query = Events
             .Where(p => p.Sequence >= sequence)
             .OrderBy(p => p.Sequence);
 
