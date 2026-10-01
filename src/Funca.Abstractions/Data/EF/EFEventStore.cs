@@ -2,36 +2,18 @@ using System.Runtime.CompilerServices;
 
 namespace Funca.Abstractions.Data.EF;
 
-public class EFEventStore<TDataContext> : IEventStore
+public class EFEventStore<TDataContext>(TDataContext dataContext) : IEventStore
     where TDataContext : DbContext, IDataContext
 {
-    protected readonly DbContext DataContext;
-    private readonly TenantId? _tenantId;
+    protected readonly DbContext DataContext = dataContext;
 
-    public EFEventStore(TDataContext dataContext)
-        : this(dataContext, null)
-    {
-    }
-
-    public EFEventStore(TDataContext dataContext, TenantId? tenantId)
-    {
-        ArgumentNullException.ThrowIfNull(dataContext);
-        DataContext = dataContext;
-        _tenantId = tenantId;
-    }
-
-    private IQueryable<EventEnvelopeState> Events => TenantQuery.Apply(
-        DataContext.Set<EventEnvelopeState>().AsNoTracking(), _tenantId);
+    private IQueryable<EventEnvelopeState> Events
+        => DataContext.Set<EventEnvelopeState>().AsNoTracking();
 
     public async ValueTask<EventEnvelopeState> AppendAsync(
         EventEnvelopeState envelope,
         CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(envelope);
-
-        if (_tenantId is { } tenant && envelope.TenantId != tenant)
-            throw new ArgumentException("The event belongs to a different tenant.", nameof(envelope));
-
         var entry = await DataContext.Set<EventEnvelopeState>()
             .AddAsync(envelope, cancellationToken);
 

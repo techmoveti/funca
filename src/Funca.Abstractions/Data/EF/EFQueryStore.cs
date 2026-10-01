@@ -1,27 +1,14 @@
 ﻿namespace Funca.Abstractions.Data.EF;
 
-public class EFQueryStore<TDataContext, TState, TKey> : IQueryStore<TState, TKey>
+public class EFQueryStore<TDataContext, TState, TKey>(TDataContext dataContext) : IQueryStore<TState, TKey>
     where TDataContext : DbContext, IDataContext
     where TState : class, IState<TKey>
     where TKey : notnull
 {
-    protected readonly DbContext DataContext;
-    private readonly TenantId? _tenantId;
+    protected readonly DbContext DataContext = dataContext;
 
-    protected EFQueryStore(TDataContext dataContext)
-        : this(dataContext, null)
-    {
-    }
-
-    protected EFQueryStore(TDataContext dataContext, TenantId? tenantId)
-    {
-        ArgumentNullException.ThrowIfNull(dataContext);
-        DataContext = dataContext;
-        _tenantId = tenantId;
-    }
-
-    private IQueryable<TState> States => TenantQuery.Apply(
-        DataContext.Set<TState>().AsNoTracking(), _tenantId);
+    private IQueryable<TState> States
+        => DataContext.Set<TState>().AsNoTracking();
 
     public async Task<Option<TState>> GetAsync(TKey id, CancellationToken token)
     {
