@@ -81,10 +81,60 @@ var message = result switch
 };
 ```
 
-`ResultBuilder` acumula erros e só executa a factory de `Build` quando todas as validações passam.
-Os overloads sem alias registram pelo próprio `Type`; aliases explícitos têm registro separado.
-Repetir um alias substitui seu valor; uma validação que falha remove o valor desse registro,
-mas erros anteriores continuam acumulados. Execute `EnsureAsync` sequencialmente na mesma instância.
+`Of` inicia um encadeamento com sucesso. `Ensure` valida o valor e pode receber um erro personalizado;
+após a primeira falha, os próximos predicados não são executados. `Map` transforma o valor de sucesso,
+enquanto `Bind` encadeia uma operação que já retorna `Result<TOut>`, sem criar resultados aninhados.
+Em caso de falha, ambos propagam os erros sem executar a função recebida.
+
+```csharp
+Result<int> ParseAge(string text) => int.TryParse(text, out var age)
+    ? Result<int>.Of(age)
+    : Result<int>.Fail(Error.Invalid("idade", "Informe um número inteiro"));
+
+var ageResult = Result<string>.Of("25")
+    .Ensure(text => !string.IsNullOrWhiteSpace(text), Error.Invalid("idade", "Informe a idade"))
+    .Bind(ParseAge)
+    .Ensure(age => age >= 18, Error.Invalid("idade", "Deve ser maior de idade"));
+
+var nameResult = Result<string>.Of("Ana")
+    .Ensure(name => !string.IsNullOrWhiteSpace(name), Error.Invalid("nome", "Informe o nome"));
+
+Result<string> description = nameResult
+    .Combine(ageResult, (name, age) => (Name: name, Age: age))
+    .Map(person => $"{person.Name}: {person.Age} anos");
+```
+
+`Combine(other, combiner)` junta os valores quando ambos têm sucesso e acumula os erros em ordem,
+da esquerda para a direita, quando há falhas. `Combine(other)` e `Result<T>.Combine(left, right)`
+mantêm o valor da esquerda quando ambos têm sucesso. As funções fornecidas a essas operações
+devem ser não nulas; exceções lançadas por elas são propagadas. `Bind` rejeita um resultado `default`
+retornado pela função.
+
+`Match` produz um valor comum executando apenas o handler de sucesso ou de falha. `Tap` executa
+uma ação no sucesso e devolve o mesmo resultado; em falhas, a ação não é executada. `Recover`
+recebe os erros e retorna um resultado alternativo apenas em falhas, preservando sucessos existentes.
+O resultado alternativo pode ser sucesso ou falha, mas não pode ser `default`.
+
+```csharp
+var message = description
+    .Tap(text => Console.WriteLine(text))
+    .Match(
+        text => text,
+        errors => string.Join("; ", errors.Errors.Select(error => error.Message)));
+
+var withFallback = Result<string>.Fail(Error.NotFound("Descrição não encontrada"))
+    .Recover(_ => Result<string>.Of("Não informado"));
+```
+
+`EnsureAsync` recebe `Func<T, CancellationToken, ValueTask<bool>>`, com erro personalizado opcional.
+`BindAsync` recebe `Func<T, CancellationToken, ValueTask<Result<TOut>>>`. Ambos retornam `ValueTask`
+e recebem um `CancellationToken` opcional. Aguarde cada etapa com `await` antes de encadear a próxima.
+Em falhas, os callbacks não são executados. O cancelamento é verificado antes da operação, inclusive
+em resultados de falha, e novamente após aguardar o callback. `BindAsync` rejeita um resultado `default`
+retornado pelo callback. Exceções dos callbacks são propagadas, assim como nas operações síncronas.
+
+Para acumular erros de validações independentes, crie um `Result` para cada valor e use `Combine`,
+como no exemplo acima. O encadeamento de `Ensure` interrompe as validações na primeira falha.
 `ErrorCollection.Errors` é um `ImmutableArray<Error>` com uma cópia dos erros fornecidos.
 
 ### Dados, consultas e persistência
