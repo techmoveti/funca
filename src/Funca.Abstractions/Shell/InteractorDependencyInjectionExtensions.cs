@@ -42,7 +42,7 @@ public sealed class LoggingInteractorDecorator<TInput, TSuccess, TOutput>(
 
         switch (output)
         {
-            case ValidationErrors ve:
+            case ErrorResults ve:
                 logger.LogWarning("Falha de validação acumulativa.");
 
                 break;

@@ -2,23 +2,22 @@
 
 namespace Funca.Abstractions.Containers;
 
-public readonly record struct ValidationErrors(ErrorResult[] Errors);
+public union Result<T>(T, ErrorResults);
 
-public union ValidationResult<T>(T, ValidationErrors);
-
-public sealed class ValidationBuilder
+public sealed class ResultBuilder
 {
     private readonly List<ErrorResult> _errors = [];
     private readonly Dictionary<string, object?> _validObjects = [];
 
-    public bool IsValid => _errors.Count == 0;
+    public bool IsValid 
+        => _errors.Count == 0;
 
-    public static ValidationBuilder Combine() => new();
+    public static ResultBuilder Combine() => new();
 
-    public ValidationBuilder Ensure<T>(string alias, T value, Func<T, bool> validator, string message)
+    public ResultBuilder Ensure<T>(string alias, T value, Func<T, bool> validator, string message)
         => Ensure(alias, value, validator, ErrorResult.Invalid(alias, message));
 
-    public ValidationBuilder Ensure<T>(string alias, T value, Func<T, bool> validator, ErrorResult error)
+    public ResultBuilder Ensure<T>(string alias, T value, Func<T, bool> validator, ErrorResult error)
     {
         if (validator(value))
             _validObjects[alias] = value; // Guarda pelo apelido fornecido
@@ -28,13 +27,13 @@ public sealed class ValidationBuilder
         return this;
     }
 
-    public ValidationBuilder Ensure<T>(T value, Func<T, bool> validator, string message)
+    public ResultBuilder Ensure<T>(T value, Func<T, bool> validator, string message)
         => Ensure(typeof(T).Name, value, validator, ErrorResult.Invalid(typeof(T).Name, message));
 
-    public ValidationBuilder Ensure<T>(T value, Func<T, bool> validator, ErrorResult error)
+    public ResultBuilder Ensure<T>(T value, Func<T, bool> validator, ErrorResult error)
         => Ensure(typeof(T).Name, value, validator, error);
 
-    public async ValueTask<ValidationBuilder> EnsureAsync<T>(
+    public async ValueTask<ResultBuilder> EnsureAsync<T>(
         string alias,
         T value,
         Func<T, CancellationToken, ValueTask<bool>> validator,
@@ -49,7 +48,8 @@ public sealed class ValidationBuilder
         return this;
     }
 
-    public T Get<T>() => Get<T>(typeof(T).Name);
+    public T Get<T>() 
+        => Get<T>(typeof(T).Name);
 
     public T Get<T>(string alias)
     {
@@ -62,13 +62,14 @@ public sealed class ValidationBuilder
             $"O objeto com alias ou tipo '{alias}' não foi validado com sucesso ou não foi registrado no Builder.");
     }
 
-    public ValidationResult<T> Build<T>(Func<ValidationBuilder, T> factory)
+    public Result<T> Build<T>(Func<ResultBuilder, T> factory)
     {
         if (IsValid)
             return factory(this);
 
-        return new ValidationErrors([.. _errors]);
+        return new ErrorResults([.. _errors]);
     }
 
-    public ImmutableArray<ErrorResult> GetErrors() => [.. _errors];
+    public ImmutableArray<ErrorResult> GetErrors() 
+        => [.. _errors];
 }
