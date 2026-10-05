@@ -9,9 +9,9 @@ public interface IQueryStore<TState, TKey>
     where TState : class, IState<TKey>
     where TKey : notnull
 {
-    Task<Option<TState>> GetAsync(TKey id, CancellationToken token);
+    Task<TState?> GetAsync(TKey id, CancellationToken token);
 
-    Task<Option<TModel>> GetProjectedAsync<TModel>(
+    Task<TModel?> GetProjectedAsync<TModel>(
         TKey id,
         Expression<Func<TState, TModel>> projection,
         CancellationToken token);

@@ -10,30 +10,18 @@ public class EFQueryStore<TDataContext, TState, TKey>(TDataContext dataContext) 
     private IQueryable<TState> States
         => DataContext.Set<TState>().AsNoTracking();
 
-    public async Task<Option<TState>> GetAsync(TKey id, CancellationToken token)
-    {
-        var state = await States.Where(p => p.Id.Equals(id)).FirstOrDefaultAsync(token);
+    public async Task<TState?> GetAsync(TKey id, CancellationToken token)
+        => await States.Where(p => p.Id.Equals(id)).FirstOrDefaultAsync(token);
 
-        return state is null
-            ? Option<TState>.None()
-            : Option<TState>.Some(state);
-    }
-
-    public async Task<Option<TModel>> GetProjectedAsync<TModel>(
+    public async Task<TModel?> GetProjectedAsync<TModel>(
         TKey id,
         Expression<Func<TState, TModel>> projection,
         CancellationToken token)
-    {
-        var models = await States
+        => await States
             .Where(p => p.Id!.Equals(id))
             .Take(1)
             .Select(projection)
-            .ToListAsync(token);
-
-        return models.Count == 0 || models[0] is null
-            ? Option<TModel>.None()
-            : Option<TModel>.Some(models[0]);
-    }
+            .FirstOrDefaultAsync(token);
 
     public async Task<IReadOnlyList<TState>> GetManyAsync(IReadOnlyCollection<TKey> ids, CancellationToken token)
     {

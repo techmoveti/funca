@@ -1,24 +1,34 @@
-﻿namespace Funca.Abstractions.Shell;
+﻿using Funca.Abstractions.Data;
+
+namespace Funca.Abstractions.Shell;
 
 public sealed class RequestContext
 {
-    public Option<string> CorrelationId { get; private set; } = Option.None<string>();
+    public string CorrelationId { get; private set; } = Guid.NewGuid().ToString();
 
     public RequestContext SetCorrelationId(string correlationId)
     {
-        CorrelationId = Option.Some(correlationId);
+        CorrelationId = correlationId;
 
         return this;
     }
 
-    public Option<UserContext> UserContext { get; private set; } = Option.None<UserContext>();
+    public UserContext? UserContext { get; private set; }
 
     public RequestContext SetUserContext(UserContext userContext)
     {
-        UserContext = Option.Some(userContext);
+        UserContext = userContext;
 
         return this;
     }
+
+    public TenantId? TenantId { get; private set; }
+
+    public void SetTenant(TenantId tenantId)
+        => TenantId = tenantId;
+
+    public TenantId GetTenant()
+        => TenantId ?? throw new InvalidOperationException("Tenant must be set!");
 
     private readonly Lazy<Dictionary<string, object>> _attachments =
         new(() => new Dictionary<string, object>());
@@ -31,15 +41,15 @@ public sealed class RequestContext
         _attachments.Value[accessKey] = valueOfT;
     }
 
-    public Option<T> Detach<T>(string accessKey) where T : class
+    public T? Detach<T>(string accessKey) where T : class
     {
         if (!_attachments.IsValueCreated)
-            return Option.None<T>();
+            return null;
 
         ArgumentException.ThrowIfNullOrWhiteSpace(accessKey);
 
         return _attachments.Value.TryGetValue(accessKey, out var content) && content is T typedContent
-            ? Option.Some(typedContent)
-            : Option.None<T>();
+            ? typedContent
+            : null;
     }
 }

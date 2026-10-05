@@ -11,7 +11,7 @@ public sealed class RequestContextTests
         context.Attach("key", "first");
         context.Attach("key", "second");
 
-        Assert.Equal("second", context.Detach<string>("key").Unwrap());
-        Assert.True(context.Detach<UserContext>("key").IsNone);
+        Assert.Equal("second", context.Detach<string>("key"));
+        Assert.Null(context.Detach<UserContext>("key"));
     }
 }

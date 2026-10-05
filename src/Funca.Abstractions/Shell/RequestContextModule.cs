@@ -6,42 +6,25 @@ public static class RequestContextModule
 {
     extension(RequestContext @this)
     {
-        public void SetTenant(TenantId tenantId)
-            => @this.Attach("tenantId", tenantId.Value);
-
-        public Option<TenantId> GetTenant()
-        {
-            return @this
-                .Detach<string>("tenantId")
-                .Match(
-                    s => Option<TenantId>.Some(new TenantId(s)),
-                    Option.None<TenantId>);
-        }
-
-        public Result<EventEnvelopeState> WrapEvent<TEvent>(
+        public EventEnvelopeState WrapEvent<TEvent>(
             string aggregateType,
             Guid aggregateId,
             int version,
-            TEvent @event)
-            where TEvent : IEvent
-            => @this
-                .GetTenant()
-                .ToResult()
-                .Map(tenantId =>
-                    new EventEnvelopeState(
-                        0,
-                        version,
-                        tenantId,
-                        aggregateType,
-                        aggregateId,
-                        @event.Timestamp,
-                        @this.UserContext.Value?.UserId,
-                        @this.UserContext.Value?.UserName,
-                        @this.CorrelationId.Value,
-                        @event.GetType().Name,
-                        JsonSerializer.SerializeToElement(@event)));
+            TEvent @event) where TEvent : IEvent
+            => new(
+                0,
+                version,
+                @this.GetTenant(),
+                aggregateType,
+                aggregateId,
+                @event.Timestamp,
+                @this.UserContext?.UserId,
+                @this.UserContext?.UserName,
+                @this.CorrelationId,
+                @event.GetType().Name,
+                JsonSerializer.SerializeToElement(@event));
 
-        public Result<EventEnvelopeState> WrapEvent<TEvent, TAggregate>(
+        public EventEnvelopeState WrapEvent<TEvent, TAggregate>(
             Guid aggregateId,
             int version,
             TEvent @event)

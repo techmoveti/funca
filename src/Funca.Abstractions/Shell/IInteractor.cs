@@ -1,13 +1,15 @@
 ﻿namespace Funca.Abstractions.Shell;
 
+public interface IOutcome<out TSuccess>
+{
+}
+
 /// <summary>
 ///     Use Case Abstraction - Imperative Shell.
 /// </summary>
-/// <typeparam name="TInput"></typeparam>
-/// <typeparam name="TOutput"></typeparam>
-public interface IInteractor<in TInput, TOutput>
+public interface IInteractor<in TInput, out TSuccess, TOutput>
     where TInput : class, IMessage
-    where TOutput : class, IMessage
+    where TOutput : IOutcome<TSuccess>
 {
-    ValueTask<Result<TOutput>> InteractAsync(TInput input, CancellationToken cancellationToken);
+    ValueTask<TOutput> InteractAsync(TInput input, CancellationToken cancellationToken);
 }

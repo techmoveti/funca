@@ -18,34 +18,10 @@ Este pacote mira `net11.0` e usa recursos preview do .NET/C#.
 
 ## Recursos entregues
 
-### Containers funcionais
-
-- `Result<T>` para representar operações que podem terminar com sucesso ou erro.
-- `Option<T>` para representar presença (`Some`) ou ausência (`None`) de valor.
-- `ErrorResult` com tipos de erro padronizados: `Failure`, `Invalid`, `NotFound`, `Unauthorized` e `Forbidden`.
-- Operações de composição como `Map`, `Bind`, `Match`, `Ensure`, `Filter`, `OrElse`, `Tee` e `IfNone`.
-- Suporte síncrono, `Task` e `ValueTask` para pipelines sem quebrar o estilo funcional.
-- Conversão de `Option<T>` para `Result<T>` quando a ausência precisa virar erro explícito.
-
-Exemplo:
-
-```csharp
-using Funca.Abstractions.Containers;
-
-Result<Customer> result =
-    Result.Ok(input)
-        .Ensure(x => !string.IsNullOrWhiteSpace(x.Document), () => ErrorResult.Invalid("Document is required."))
-        .Map(x => new Customer(x.Name, x.Document));
-
-return result.Match(
-    customer => Results.Ok(customer),
-    errors => Results.BadRequest(errors));
-```
-
 ### Contratos para application shell
 
 - `IMessage` como marcador para mensagens de entrada, saída e eventos.
-- `IInteractor<TInput, TOutput>` para padronizar casos de uso que retornam `Result<TOutput>`.
+- `IInteractor<TInput, TOutput>` para padronizar casos de uso que retornam `TOutput`.
 - `RequestContext` para carregar `CorrelationId`, usuário atual e anexos tipados durante a execução.
 - `UserContext` para representar usuário autenticado.
 
@@ -118,14 +94,6 @@ public sealed class CreateOrderInteractor : IInteractor<CreateOrderCommand, Crea
 - `CustomFieldMetadata`, `FieldId`, `IHaveCustomData` e `CustomData` para cenários com campos customizados por tenant e
   entidade.
 - `MetadataModule.Field(...)` para criar metadados de campo de forma concisa.
-
-## Invariantes importantes
-
-- Todo `Result<T>` em estado de erro carrega pelo menos um `ErrorResult` não nulo.
-- Coleções de erro são copiadas na criação e na materialização, impedindo mutação externa do resultado depois de criado.
-- `Result<T>.IsOk` independe de `T` ser nullable ou do valor interno ser `null`; o estado de sucesso é controlado por
-  uma flag explícita.
-- `Option<T>.Some(...)` não aceita valor `null`; use `Option.From(value)` quando quiser converter `null` em `None`.
 
 ## Quando usar
 

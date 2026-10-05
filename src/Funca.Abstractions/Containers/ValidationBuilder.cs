@@ -1,0 +1,74 @@
+﻿using System.Collections.Immutable;
+
+namespace Funca.Abstractions.Containers;
+
+public readonly record struct ValidationErrors(ErrorResult[] Errors);
+
+public union ValidationResult<T>(T, ValidationErrors);
+
+public sealed class ValidationBuilder
+{
+    private readonly List<ErrorResult> _errors = [];
+    private readonly Dictionary<string, object?> _validObjects = [];
+
+    public bool IsValid => _errors.Count == 0;
+
+    public static ValidationBuilder Combine() => new();
+
+    public ValidationBuilder Ensure<T>(string alias, T value, Func<T, bool> validator, string message)
+        => Ensure(alias, value, validator, ErrorResult.Invalid(alias, message));
+
+    public ValidationBuilder Ensure<T>(string alias, T value, Func<T, bool> validator, ErrorResult error)
+    {
+        if (validator(value))
+            _validObjects[alias] = value; // Guarda pelo apelido fornecido
+        else
+            _errors.Add(error);
+
+        return this;
+    }
+
+    public ValidationBuilder Ensure<T>(T value, Func<T, bool> validator, string message)
+        => Ensure(typeof(T).Name, value, validator, ErrorResult.Invalid(typeof(T).Name, message));
+
+    public ValidationBuilder Ensure<T>(T value, Func<T, bool> validator, ErrorResult error)
+        => Ensure(typeof(T).Name, value, validator, error);
+
+    public async ValueTask<ValidationBuilder> EnsureAsync<T>(
+        string alias,
+        T value,
+        Func<T, CancellationToken, ValueTask<bool>> validator,
+        ErrorResult error,
+        CancellationToken cancellationToken = default)
+    {
+        if (await validator(value, cancellationToken))
+            _validObjects[alias] = value;
+        else
+            _errors.Add(error);
+
+        return this;
+    }
+
+    public T Get<T>() => Get<T>(typeof(T).Name);
+
+    public T Get<T>(string alias)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(alias);
+
+        if (_validObjects.TryGetValue(alias, out var value))
+            return (T)value!;
+
+        throw new InvalidOperationException(
+            $"O objeto com alias ou tipo '{alias}' não foi validado com sucesso ou não foi registrado no Builder.");
+    }
+
+    public ValidationResult<T> Build<T>(Func<ValidationBuilder, T> factory)
+    {
+        if (IsValid)
+            return factory(this);
+
+        return new ValidationErrors([.. _errors]);
+    }
+
+    public ImmutableArray<ErrorResult> GetErrors() => [.. _errors];
+}
