@@ -2,6 +2,7 @@
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System.Runtime.CompilerServices;
 
 public static class InteractorDependencyInjectionExtensions
 {
@@ -40,16 +41,21 @@ public sealed class LoggingInteractorDecorator<TInput, TSuccess, TOutput>(
 
         var output = await inner.InteractAsync(input, cancellationToken);
 
-        switch (output)
+        // O parâmetro genérico não recebe o desempacotamento automático de unions.
+        object? value = output is IUnion union ? union.Value : output;
+
+        switch (value)
         {
-            case ErrorResults ve:
+            case ErrorCollection:
                 logger.LogWarning("Falha de validação acumulativa.");
 
                 break;
-            case ErrorResult er:
+            case Error er:
                 logger.LogWarning("Erro de negócio: {Message}", er.Message);
 
                 break;
+            case null:
+                throw new InvalidOperationException("O interactor retornou um resultado sem valor.");
             default:
                 logger.LogInformation("Executado com sucesso.");
 

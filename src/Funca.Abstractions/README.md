@@ -21,7 +21,8 @@ Este pacote mira `net11.0` e usa recursos preview do .NET/C#.
 ### Contratos para application shell
 
 - `IMessage` como marcador para mensagens de entrada, saída e eventos.
-- `IInteractor<TInput, TOutput>` para padronizar casos de uso que retornam `TOutput`.
+- `IInteractor<TInput, TSuccess, TOutput>` para padronizar casos de uso que retornam `TOutput`, com
+  `TOutput : IOutcome<TSuccess>`.
 - `RequestContext` para carregar `CorrelationId`, usuário atual e anexos tipados durante a execução.
 - `UserContext` para representar usuário autenticado.
 
@@ -31,16 +32,41 @@ Exemplo:
 public sealed record CreateOrderCommand(Guid CustomerId) : IMessage;
 public sealed record CreateOrderOutput(Guid OrderId) : IMessage;
 
-public sealed class CreateOrderInteractor : IInteractor<CreateOrderCommand, CreateOrderOutput>
+public sealed class CreateOrderInteractor
+    : IInteractor<CreateOrderCommand, CreateOrderOutput, Result<CreateOrderOutput>>
 {
     public ValueTask<Result<CreateOrderOutput>> InteractAsync(
         CreateOrderCommand input,
         CancellationToken cancellationToken)
     {
-        return ValueTask.FromResult(Result.Ok(new CreateOrderOutput(Guid.CreateVersion7())));
+        return ValueTask.FromResult(Result<CreateOrderOutput>.Ok(new CreateOrderOutput(Guid.CreateVersion7())));
     }
 }
 ```
+
+### Resultados e validação
+
+`Result<T>` é uma union nativa de `Success<T>` e `ErrorCollection` e implementa `IOutcome<T>`.
+Use `Result<T>.Ok(value)` para sucesso e `Result<T>.Fail(error)` para falha. O caso `Success<T>`
+preserva sucesso com `null` e evita sobreposição entre o valor e o tipo dos erros.
+Um resultado `default` não possui valor e deve ser rejeitado ao consumir o resultado.
+
+```csharp
+Result<string?> result = Result<string?>.Ok(null);
+
+var message = result switch
+{
+    Success<string?> success => success.Value ?? "Sucesso sem conteúdo",
+    ErrorCollection errors => string.Join("; ", errors.Errors.Select(error => error.Message)),
+    null => throw new InvalidOperationException("Resultado sem valor"),
+};
+```
+
+`ResultBuilder` acumula erros e só executa a factory de `Build` quando todas as validações passam.
+Os overloads sem alias registram pelo próprio `Type`; aliases explícitos têm registro separado.
+Repetir um alias substitui seu valor; uma validação que falha remove o valor desse registro,
+mas erros anteriores continuam acumulados. Execute `EnsureAsync` sequencialmente na mesma instância.
+`ErrorCollection.Errors` é um `ImmutableArray<Error>` com uma cópia dos erros fornecidos.
 
 ### Dados, consultas e persistência
 

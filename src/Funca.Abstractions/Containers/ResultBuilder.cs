@@ -2,74 +2,105 @@
 
 namespace Funca.Abstractions.Containers;
 
-public union Result<T>(T, ErrorResults);
-
 public sealed class ResultBuilder
 {
-    private readonly List<ErrorResult> _errors = [];
-    private readonly Dictionary<string, object?> _validObjects = [];
+    private readonly List<Error> _errors = [];
+    private readonly Dictionary<object, object?> _validObjects = [];
 
-    public bool IsValid 
+    public bool IsValid
         => _errors.Count == 0;
 
     public static ResultBuilder Combine() => new();
 
     public ResultBuilder Ensure<T>(string alias, T value, Func<T, bool> validator, string message)
-        => Ensure(alias, value, validator, ErrorResult.Invalid(alias, message));
+        => Ensure(alias, value, validator, Error.Invalid(alias, message));
 
-    public ResultBuilder Ensure<T>(string alias, T value, Func<T, bool> validator, ErrorResult error)
+    public ResultBuilder Ensure<T>(string alias, T value, Func<T, bool> validator, Error error)
     {
-        if (validator(value))
-            _validObjects[alias] = value; // Guarda pelo apelido fornecido
-        else
-            _errors.Add(error);
+        ArgumentException.ThrowIfNullOrWhiteSpace(alias);
 
-        return this;
+        return Ensure((object)alias, value, validator, error);
     }
 
     public ResultBuilder Ensure<T>(T value, Func<T, bool> validator, string message)
-        => Ensure(typeof(T).Name, value, validator, ErrorResult.Invalid(typeof(T).Name, message));
+        => Ensure(typeof(T), value, validator, Error.Invalid(typeof(T).Name, message));
 
-    public ResultBuilder Ensure<T>(T value, Func<T, bool> validator, ErrorResult error)
-        => Ensure(typeof(T).Name, value, validator, error);
+    public ResultBuilder Ensure<T>(T value, Func<T, bool> validator, Error error)
+        => Ensure(typeof(T), value, validator, error);
 
     public async ValueTask<ResultBuilder> EnsureAsync<T>(
         string alias,
         T value,
         Func<T, CancellationToken, ValueTask<bool>> validator,
-        ErrorResult error,
+        Error error,
         CancellationToken cancellationToken = default)
     {
-        if (await validator(value, cancellationToken))
-            _validObjects[alias] = value;
-        else
-            _errors.Add(error);
+        ArgumentException.ThrowIfNullOrWhiteSpace(alias);
+        ArgumentNullException.ThrowIfNull(validator);
+        cancellationToken.ThrowIfCancellationRequested();
 
-        return this;
+        var isValid = await validator(value, cancellationToken).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        return Register(alias, value, isValid, error);
     }
 
-    public T Get<T>() 
-        => Get<T>(typeof(T).Name);
+    public T Get<T>()
+        => GetValidatedValue<T>(typeof(T));
 
     public T Get<T>(string alias)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(alias);
 
-        if (_validObjects.TryGetValue(alias, out var value))
-            return (T)value!;
-
-        throw new InvalidOperationException(
-            $"O objeto com alias ou tipo '{alias}' não foi validado com sucesso ou não foi registrado no Builder.");
+        return GetValidatedValue<T>(alias);
     }
 
     public Result<T> Build<T>(Func<ResultBuilder, T> factory)
     {
-        if (IsValid)
-            return factory(this);
+        ArgumentNullException.ThrowIfNull(factory);
 
-        return new ErrorResults([.. _errors]);
+        if (IsValid)
+            return Result<T>.Ok(factory(this));
+
+        return Result<T>.Fail(new ErrorCollection(_errors));
     }
 
-    public ImmutableArray<ErrorResult> GetErrors() 
+    public ImmutableArray<Error> GetErrors()
         => [.. _errors];
+
+    private ResultBuilder Ensure<T>(object key, T value, Func<T, bool> validator, Error error)
+    {
+        ArgumentNullException.ThrowIfNull(validator);
+
+        return Register(key, value, validator(value), error);
+    }
+
+    private ResultBuilder Register<T>(object key, T value, bool isValid, Error error)
+    {
+        if (isValid)
+            _validObjects[key] = value;
+        else
+        {
+            _validObjects.Remove(key);
+            _errors.Add(error);
+        }
+
+        return this;
+    }
+
+    private T GetValidatedValue<T>(object key)
+    {
+        if (!_validObjects.TryGetValue(key, out var value))
+            throw new InvalidOperationException(
+                $"O objeto com alias ou tipo '{key}' não foi validado com sucesso ou não foi registrado no Builder.");
+
+        if (value is T typedValue)
+            return typedValue;
+
+        if (value is null && default(T) is null)
+            return default!;
+
+        throw new InvalidOperationException(
+            $"O objeto com alias ou tipo '{key}' possui tipo '{value?.GetType().ToString() ?? "null"}', incompatível com '{typeof(T)}'.");
+    }
 }
