@@ -4,15 +4,13 @@ namespace Funca.Abstractions.Containers;
 
 public readonly record struct ErrorCollection
 {
-    private readonly ImmutableArray<Error> _errors;
-
     public ErrorCollection(IEnumerable<Error> Errors)
     {
         ArgumentNullException.ThrowIfNull(Errors);
-        _errors = Errors.ToImmutableArray();
+        this.Errors = [.. Errors];
     }
 
-    public ImmutableArray<Error> Errors => _errors.IsDefault ? [] : _errors;
+    public ImmutableArray<Error> Errors => field.IsDefault ? [] : field;
 
     public static implicit operator ErrorCollection(Error error)
         => new([error]);
