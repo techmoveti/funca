@@ -13,4 +13,7 @@ public static class ResultModule
 
     public static ErrorCollection Fail(Error[] error)
         => new([.. error]);
+
+    public static Result<T> Of<T>(T value)
+        => new(new Success<T>(value));
 }
