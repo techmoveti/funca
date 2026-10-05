@@ -140,6 +140,29 @@ public union Result<T>(Success<T>, ErrorCollection)
         return this;
     }
 
+    public async ValueTask<Result<T>> TapAsync(
+        Func<T, CancellationToken, ValueTask> action,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        switch (Value)
+        {
+            case Success<T> success:
+                await action(success.Value, cancellationToken).ConfigureAwait(false);
+                cancellationToken.ThrowIfCancellationRequested();
+
+                break;
+            case ErrorCollection:
+                break;
+            default:
+                throw new InvalidOperationException("The result must be initialized.");
+        }
+
+        return this;
+    }
+
     public Result<T> Recover(Func<ErrorCollection, Result<T>> recovery)
     {
         ArgumentNullException.ThrowIfNull(recovery);

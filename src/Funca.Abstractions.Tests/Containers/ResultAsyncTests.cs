@@ -30,8 +30,16 @@ public sealed class ResultAsyncTests
             return Result<string?>.Of(null);
         }, cancellation.Token);
 
-        Assert.Null(Assert.IsType<Success<string?>>(result.Value).Value);
-        Assert.Equal(new[] { "ensure", "bind" }, calls);
+        var observed = await result.TapAsync(async (value, token) =>
+        {
+            await Task.Yield();
+            calls.Add("tap");
+            Assert.Null(value);
+            Assert.Equal(cancellation.Token, token);
+        }, cancellation.Token);
+
+        Assert.Null(Assert.IsType<Success<string?>>(observed.Value).Value);
+        Assert.Equal(new[] { "ensure", "bind", "tap" }, calls);
     }
 
     [Theory]
@@ -81,9 +89,11 @@ public sealed class ResultAsyncTests
         var validated = await Result<int>.Fail(errors).EnsureAsync(
             (_, _) => throw new Exception("The predicate must not run."), Error.Invalid("replacement"));
         var result = await validated.BindAsync<string>((_, _) => throw new Exception("The binder must not run."));
+        var observed = await result.TapAsync((_, _) => throw new Exception("The action must not run."));
 
         Assert.Equal(errors, Assert.IsType<ErrorCollection>(validated.Value));
         Assert.Equal(errors, Assert.IsType<ErrorCollection>(result.Value));
+        Assert.Equal(errors, Assert.IsType<ErrorCollection>(observed.Value));
     }
 
     [Fact]
@@ -117,8 +127,12 @@ public sealed class ResultAsyncTests
             await source.BindAsync<string>((_, _) => throw new Exception("The binder must not run."),
                 cancellation.Token));
 
+        var tapException = await Assert.ThrowsAnyAsync<OperationCanceledException>(async () =>
+            await source.TapAsync((_, _) => throw new Exception("The action must not run."), cancellation.Token));
+
         Assert.Equal(cancellation.Token, ensureException.CancellationToken);
         Assert.Equal(cancellation.Token, bindException.CancellationToken);
+        Assert.Equal(cancellation.Token, tapException.CancellationToken);
     }
 
     [Fact]
@@ -155,6 +169,46 @@ public sealed class ResultAsyncTests
     }
 
     [Fact]
+    public async Task TapAsync_awaits_the_action_once_and_preserves_the_original_success_value()
+    {
+        using var cancellation = new CancellationTokenSource();
+        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var value = new object();
+        var calls = 0;
+
+        var pending = Result<object>.Of(value).TapAsync((actual, token) =>
+        {
+            calls++;
+            Assert.Same(value, actual);
+            Assert.Equal(cancellation.Token, token);
+
+            return new ValueTask(completion.Task);
+        }, cancellation.Token);
+
+        Assert.False(pending.IsCompleted);
+        completion.SetResult();
+        var result = await pending;
+
+        Assert.Same(value, Assert.IsType<Success<object>>(result.Value).Value);
+        Assert.Equal(1, calls);
+    }
+
+    [Fact]
+    public async Task TapAsync_observes_cancellation_while_awaiting_an_action_that_ignores_the_token()
+    {
+        using var cancellation = new CancellationTokenSource();
+        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        var pending = Result<int>.Of(42).TapAsync((_, _) => new ValueTask(completion.Task), cancellation.Token);
+        Assert.False(pending.IsCompleted);
+        cancellation.Cancel();
+        completion.SetResult();
+
+        var exception = await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await pending);
+        Assert.Equal(cancellation.Token, exception.CancellationToken);
+    }
+
+    [Fact]
     public async Task Async_helpers_reject_null_callbacks()
     {
         var source = Result<int>.Of(42);
@@ -165,10 +219,12 @@ public sealed class ResultAsyncTests
             await Assert.ThrowsAsync<ArgumentNullException>(async ()
                 => await source.EnsureAsync(null!, Error.Invalid("custom")));
         var bind = await Assert.ThrowsAsync<ArgumentNullException>(async () => await source.BindAsync<string>(null!));
+        var tap = await Assert.ThrowsAsync<ArgumentNullException>(async () => await source.TapAsync(null!));
 
         Assert.Equal("predicate", defaultEnsure.ParamName);
         Assert.Equal("predicate", customEnsure.ParamName);
         Assert.Equal("binder", bind.ParamName);
+        Assert.Equal("action", tap.ParamName);
     }
 
     [Fact]
@@ -180,6 +236,8 @@ public sealed class ResultAsyncTests
             await source.EnsureAsync((_, _) => throw new Exception("The predicate must not run.")));
         await Assert.ThrowsAsync<InvalidOperationException>(async () =>
             await source.BindAsync<string>((_, _) => throw new Exception("The binder must not run.")));
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await source.TapAsync((_, _) => throw new Exception("The action must not run.")));
     }
 
     [Fact]
@@ -215,7 +273,16 @@ public sealed class ResultAsyncTests
                 throw exception;
             }));
 
+        var tapException = await Assert.ThrowsAsync<FormatException>(async () =>
+            await source.TapAsync(async (_, _) =>
+            {
+                await Task.Yield();
+
+                throw exception;
+            }));
+
         Assert.Same(exception, ensureException);
         Assert.Same(exception, bindException);
+        Assert.Same(exception, tapException);
     }
 }

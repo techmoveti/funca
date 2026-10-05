@@ -127,8 +127,10 @@ var withFallback = Result<string>.Fail(Error.NotFound("Descrição não encontra
 ```
 
 `EnsureAsync` recebe `Func<T, CancellationToken, ValueTask<bool>>`, com erro personalizado opcional.
-`BindAsync` recebe `Func<T, CancellationToken, ValueTask<Result<TOut>>>`. Ambos retornam `ValueTask`
-e recebem um `CancellationToken` opcional. Aguarde cada etapa com `await` antes de encadear a próxima.
+`BindAsync` recebe `Func<T, CancellationToken, ValueTask<Result<TOut>>>`. `TapAsync` recebe
+`Func<T, CancellationToken, ValueTask>`, aguarda a ação no sucesso e devolve o mesmo resultado.
+Essas operações retornam `ValueTask` e recebem um `CancellationToken` opcional.
+Aguarde cada etapa com `await` antes de encadear a próxima.
 Em falhas, os callbacks não são executados. O cancelamento é verificado antes da operação, inclusive
 em resultados de falha, e novamente após aguardar o callback. `BindAsync` rejeita um resultado `default`
 retornado pelo callback. Exceções dos callbacks são propagadas, assim como nas operações síncronas.
