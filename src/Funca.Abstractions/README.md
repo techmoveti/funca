@@ -21,8 +21,8 @@ Este pacote mira `net11.0` e usa recursos preview do .NET/C#.
 ### Contratos para application shell
 
 - `IMessage` como marcador para mensagens de entrada, saída e eventos.
-- `IInteractor<TInput, TSuccess, TOutput>` para padronizar casos de uso que retornam `TOutput`, com
-  `TOutput : IOutcome<TSuccess>`.
+- `IInteractor<TInput, TOutput>` para padronizar casos de uso com retorno livre, incluindo `Result<T>` e unions
+  próprias.
 - `RequestContext` para carregar `CorrelationId`, usuário atual e anexos tipados durante a execução.
 - `UserContext` para representar usuário autenticado.
 
@@ -33,7 +33,7 @@ public sealed record CreateOrderCommand(Guid CustomerId) : IMessage;
 public sealed record CreateOrderOutput(Guid OrderId) : IMessage;
 
 public sealed class CreateOrderInteractor
-    : IInteractor<CreateOrderCommand, CreateOrderOutput, Result<CreateOrderOutput>>
+    : IInteractor<CreateOrderCommand, Result<CreateOrderOutput>>
 {
     public ValueTask<Result<CreateOrderOutput>> InteractAsync(
         CreateOrderCommand input,
@@ -44,9 +44,28 @@ public sealed class CreateOrderInteractor
 }
 ```
 
+Registre o interactor pela extensão para receber o decorator de logging ao resolver a interface:
+
+```csharp
+services.AddInteractor<CreateOrderCommand, Result<CreateOrderOutput>, CreateOrderInteractor>();
+```
+
+O registro usa lifetime scoped e requer logging registrado nos serviços (por exemplo, com `services.AddLogging()`).
+Cada caso de uso também pode definir uma union própria, sem interfaces marcadoras:
+
+```csharp
+public sealed record ApprovalRequired(decimal Total);
+public union CreateOrderOutcome(Success<CreateOrderOutput>, ApprovalRequired, ErrorCollection);
+// O interactor pode implementar IInteractor<CreateOrderCommand, CreateOrderOutcome>.
+```
+
+O decorator identifica `Error` e `ErrorCollection` como erros conhecidos. Para os demais retornos,
+registra "Execução concluída", sem classificar os casos próprios do domínio como sucesso.
+Uma union sem valor é rejeitada; retornos comuns podem ser nulos quando seu contrato permitir.
+
 ### Resultados e validação
 
-`Result<T>` é uma union nativa de `Success<T>` e `ErrorCollection` e implementa `IOutcome<T>`.
+`Result<T>` é uma union nativa de `Success<T>` e `ErrorCollection`.
 Use `Result<T>.Ok(value)` para sucesso e `Result<T>.Fail(error)` para falha. O caso `Success<T>`
 preserva sucesso com `null` e evita sobreposição entre o valor e o tipo dos erros.
 Um resultado `default` não possui valor e deve ser rejeitado ao consumir o resultado.

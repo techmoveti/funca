@@ -1,6 +1,6 @@
 namespace Funca.Abstractions.Containers;
 
-public union Result<T>(Success<T>, ErrorCollection) : IOutcome<T>
+public union Result<T>(Success<T>, ErrorCollection)
 {
     public static Result<T> Ok(T value) => new Success<T>(value);
 
