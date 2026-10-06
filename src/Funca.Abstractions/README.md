@@ -128,6 +128,23 @@ mantêm o valor da esquerda quando ambos têm sucesso. As funções fornecidas a
 devem ser não nulas; exceções lançadas por elas são propagadas. `Bind` rejeita um resultado `default`
 retornado pela função.
 
+`ResultBuilder.Combine()` inicia um builder imutável para combinar de um a oito resultados de validações
+independentes. Cada `Add` recebe um `Result<T>` e acrescenta um parâmetro tipado à função de `Build`, na ordem
+de inclusão. Valores do mesmo tipo e sucessos com `null` são preservados. Os erros são acumulados em ordem,
+incluindo duplicatas; `Build` executa a função apenas quando todos os resultados têm sucesso e retorna
+`Result<TOut>`. A função deve ser não nula e suas exceções são propagadas; resultados `default` são rejeitados.
+
+```csharp
+Result<(string Name, int Age, string? Email)> person = ResultBuilder.Combine()
+    .Add(nameResult)
+    .Add(ageResult)
+    .Add(Result<string?>.Ok(null))
+    .Build((name, age, email) => (name, age, email));
+```
+
+As expressões passadas a cada `Add` são avaliadas mesmo quando um resultado anterior falha. Para mais de oito
+valores, agrupe validações relacionadas em outros builders e combine seus resultados.
+
 `Match` produz um valor comum executando apenas o handler de sucesso ou de falha. `Tap` executa
 uma ação no sucesso e devolve o mesmo resultado; em falhas, a ação não é executada. `Recover`
 recebe os erros e retorna um resultado alternativo apenas em falhas, preservando sucessos existentes.
