@@ -2,9 +2,13 @@
 
 Abstrações leves para aplicações .NET que seguem um desenho funcional no núcleo e uma shell imperativa nas bordas.
 
-O pacote entrega containers para modelar sucesso, falha e ausência de valor sem depender de exceções como fluxo
-principal, além de contratos para casos de uso, mensageria, consultas, event sourcing, multi-tenant e metadados
-customizáveis.
+O pacote entrega containers para modelar sucesso e falha sem depender de exceções como fluxo principal,
+além de contratos para casos de uso, mensageria, consultas, agregados, event sourcing, multi-tenancy e metadados
+customizáveis, com implementações de persistência para Entity Framework Core.
+
+`Option<T>` foi removido. A ausência de valor é representada por retornos nullable, como `TState?` em
+`IQueryStore.GetAsync` e `T?` em `RequestContext.Detach<T>`. Quando a ausência representar uma falha de negócio,
+use `Result<T>.Fail(Error.NotFound(...))`.
 
 ## Instalação
 
@@ -24,11 +28,16 @@ Este pacote mira `net11.0` e usa recursos preview do .NET/C#.
 - `IInteractor<TInput, TOutput>` para padronizar casos de uso com retorno livre, incluindo `Result<T>` e unions
   próprias.
 - `RequestContext` para carregar `CorrelationId`, usuário atual e anexos tipados durante a execução.
+- `Attach<T>` para guardar anexos por chave e `Detach<T>` para consultá-los, retornando `null` quando não houver
+  um valor do tipo solicitado. Apesar do nome, `Detach<T>` não remove o anexo.
 - `UserContext` para representar usuário autenticado.
 
 Exemplo:
 
 ```csharp
+using Funca.Abstractions.Containers;
+using Funca.Abstractions.Shell;
+
 public sealed record CreateOrderCommand(Guid CustomerId) : IMessage;
 public sealed record CreateOrderOutput(Guid OrderId) : IMessage;
 
@@ -44,14 +53,8 @@ public sealed class CreateOrderInteractor
 }
 ```
 
-Registre o interactor pela extensão para receber o decorator de logging ao resolver a interface:
-
-```csharp
-services.AddInteractor<CreateOrderCommand, Result<CreateOrderOutput>, CreateOrderInteractor>();
-```
-
-O registro usa lifetime scoped e requer logging registrado nos serviços (por exemplo, com `services.AddLogging()`).
-Cada caso de uso também pode definir uma union própria, sem interfaces marcadoras:
+O registro dos interactors em injeção de dependência e a configuração de logging ficam a cargo da aplicação.
+Cada caso de uso também pode definir uma union própria como saída:
 
 ```csharp
 public sealed record ApprovalRequired(decimal Total);
@@ -59,16 +62,31 @@ public union CreateOrderOutcome(Success<CreateOrderOutput>, ApprovalRequired, Er
 // O interactor pode implementar IInteractor<CreateOrderCommand, CreateOrderOutcome>.
 ```
 
-O decorator identifica `Error` e `ErrorCollection` como erros conhecidos. Para os demais retornos,
-registra "Execução concluída", sem classificar os casos próprios do domínio como sucesso.
-Uma union sem valor é rejeitada; retornos comuns podem ser nulos quando seu contrato permitir.
+`IInteractor` exige que a entrada seja uma classe que implemente `IMessage`; a saída não possui restrição de tipo.
+O contrato retorna `ValueTask<TOutput>` e recebe `CancellationToken`.
 
 ### Resultados e validação
 
-`Result<T>` é uma union nativa de `Success<T>` e `ErrorCollection`.
+`Result<T>` é uma union customizada de `Success<T>` e `ErrorCollection`, implementada como `readonly struct`
+com armazenamento tipado e um discriminador de caso.
 Use `Result<T>.Ok(value)` para sucesso e `Result<T>.Fail(error)` para falha. O caso `Success<T>`
 preserva sucesso com `null` e evita sobreposição entre o valor e o tipo dos erros.
 Um resultado `default` não possui valor e deve ser rejeitado ao consumir o resultado.
+`IsOk` indica se o resultado contém `Success<T>`. `Unwrap()` extrai seu valor, inclusive `null`, e lança
+`InvalidOperationException` em falhas ou resultados não inicializados, com mensagens distintas para cada caso.
+
+As factories, operações e o pattern matching diretamente sobre `Result<T>` evitam boxing dos casos. `HasValue`
+indica se o resultado está inicializado; os overloads de `TryGetValue` extraem `Success<T>` ou `ErrorCollection`
+sem boxing. A propriedade `Value` retorna o caso como `object?` e faz boxing a cada acesso a um resultado
+inicializado; prefira `result switch`, `Unwrap()` ou `TryGetValue`. Converter o próprio resultado para `object`
+ou uma interface também causa boxing. A criação e combinação de coleções de erros ainda podem alocar memória.
+No compilador .NET 11 RC, a captura de casos por pattern matching pode ser limitada em código genérico;
+nesses cenários, use os overloads tipados de `TryGetValue` ou `Match`.
+
+`ResultModule` também oferece helpers estáticos: `Ok<T>` retorna `Success<T>`, `Of<T>` retorna `Result<T>` e
+`Fail` retorna `ErrorCollection`, aceitando mensagem, um erro ou um array de erros. `Fail(string)` cria um erro
+do tipo `Invalid`. `Error` permite informar chave, tipo e mensagem, com factories para `Failure`, `Invalid`,
+`NotFound`, `Unauthorized` e `Forbidden`.
 
 ```csharp
 Result<string?> result = Result<string?>.Ok(null);
@@ -126,36 +144,51 @@ var withFallback = Result<string>.Fail(Error.NotFound("Descrição não encontra
     .Recover(_ => Result<string>.Of("Não informado"));
 ```
 
-`EnsureAsync` recebe `Func<T, CancellationToken, ValueTask<bool>>`, com erro personalizado opcional.
-`BindAsync` recebe `Func<T, CancellationToken, ValueTask<Result<TOut>>>`. `TapAsync` recebe
-`Func<T, CancellationToken, ValueTask>`, aguarda a ação no sucesso e devolve o mesmo resultado.
-Essas operações retornam `ValueTask` e recebem um `CancellationToken` opcional.
-Aguarde cada etapa com `await` antes de encadear a próxima.
-Em falhas, os callbacks não são executados. O cancelamento é verificado antes da operação, inclusive
-em resultados de falha, e novamente após aguardar o callback. `BindAsync` rejeita um resultado `default`
-retornado pelo callback. Exceções dos callbacks são propagadas, assim como nas operações síncronas.
+As operações de `Result<T>` são síncronas. Aguarde operações de I/O na application shell e use os resultados
+com `Ensure`, `Map`, `Bind`, `Tap`, `Match`, `Recover` e `Combine`.
 
 Para acumular erros de validações independentes, crie um `Result` para cada valor e use `Combine`,
 como no exemplo acima. O encadeamento de `Ensure` interrompe as validações na primeira falha.
-`ErrorCollection.Errors` é um `ImmutableArray<Error>` com uma cópia dos erros fornecidos.
+`ErrorCollection.Errors` é um `ImmutableArray<Error>`. Entradas mutáveis são copiadas; um `ImmutableArray<Error>`
+fornecido diretamente ao constructor é reutilizado. O constructor para um único `Error` cria apenas o array
+imutável. `ErrorCollection.Combine` preserva ordem e duplicatas e reutiliza a coleção existente quando a outra
+está vazia. A igualdade e o hash consideram o conteúdo em ordem; `default(ErrorCollection)` equivale à coleção vazia.
+
+`Error.Empty` equivale a `default(Error)`: chave `null`, tipo `Failure` e mensagem vazia. `Message` sempre retorna
+uma string, inclusive no valor `default`. `IsEmpty()` reconhece um erro `Failure` sem chave nem mensagem, também
+aceitando chave vazia. A igualdade e o hash de `Error` usam os valores expostos de chave, tipo e mensagem.
 
 ### Dados, consultas e persistência
 
-- `IState<TKey>` para estados identificáveis.
+- `IState` como marcador de estado e `IState<TKey>` para estados identificáveis.
 - `Query<TState, TKey>` com paginação, ordenação e ponto de extensão para filtros via `IQueryable<TState>`.
-- `QueryResult<T>` com cálculo de quantidade de páginas.
-- `IQueryStore<TState, TKey>` para consultas por id, lote, projeção e paginação.
-- EF e MongoDB expõem os recursos nativos para gravação; não há uma abstração genérica de escrita.
-- `GuidModule.Sequential()` para criação de GUID v7 e `ToGuid()` para parse seguro retornando `Result<Guid>`.
+- `Query` usa página inicial `1` e tamanho de página `10`. `Skip()` exige valores positivos e verifica overflow.
+- `QueryResult<T>` com dados, página, tamanho de página, total de registros (`long`) e cálculo de `PageCount`.
+- `IQueryStore<TState, TKey>` para consultas por id, lote, projeção e paginação, com retorno nullable nas consultas
+  individuais e listas nos resultados paginados.
+- `EFQueryStore<TDataContext, TState, TKey>` como implementação de consultas para Entity Framework Core.
+- `IDataContext.ExecuteTransactionAsync` para executar um callback assíncrono em uma transação.
+- `EFDbContextWrapper` como base de `DbContext` que implementa `IDataContext`: inicia a transação, executa o
+  callback, chama `SaveChangesAsync` e faz o commit. Rejeita uma transação já ativa no contexto.
+- Para gravação de estados, use as APIs do contexto EF; não há uma abstração genérica de escrita de estados.
+- `GuidModule.Sequential()` para criação de GUID v7.
 
 ### Event sourcing e multi-tenancy
 
-- `IEvent` para eventos com `Timestamp`.
-- `IEventStore` para append e leitura de envelopes de eventos.
+- `IAggregate` como marcador de agregado e `IAggregate<TState>` para expor seu estado atual.
+- `IAggregateEvent<TState>` para expor snapshot, consultar e limpar eventos pendentes e reconstituir o estado com
+  `Replay`.
+- `AggregateEventBase<TState>` como base para agregados orientados a eventos. `Emit` aplica o evento e o adiciona
+  à lista de pendentes; `Replay` aplica eventos sem adicioná-los à lista. A classe derivada implementa `Apply`.
+  `Snapshot` expõe o estado atual, sem criar uma cópia.
+- `IEvent` estende `IMessage` e expõe `Timestamp`.
+- `IEventStore` para append e leitura de envelopes de eventos, com implementação `EFEventStore<TDataContext>`.
 - `EventEnvelopeState` com dados de sequência, versão, tenant, agregado, ator, correlação, tipo do evento e payload
   JSON.
 - `TenantId` e `IRequireTenantPartition` para contratos que exigem particionamento por tenant.
-- Extensões em `RequestContext` para definir tenant e envelopar eventos com contexto de usuário e correlação.
+- `RequestContext.SetTenant` para definir o tenant e `GetTenant` para obtê-lo, lançando exceção quando não estiver
+  definido. `WrapEvent` envelopa eventos com tenant, usuário, correlação e payload JSON; há overload com tipo de
+  agregado explícito e overload genérico `WrapEvent<TEvent, TAggregate>`.
 
 ### Configuração dos stores
 
@@ -163,19 +196,21 @@ como no exemplo acima. O encadeamento de `Ensure` interrompe as validações na 
   diretamente.
 - Na paginação, os stores aplicam `SortBy`/`OrderType` e desempate por `Id`. Sem `SortBy`, preservam a ordenação de
   `Query.Apply`, acrescentando `Id`; se não houver ordenação, usam `Id`.
-- Os novos overloads dos stores recebem `TenantId?`. Em bancos/coleções compartilhados, informe o tenant corrente
-  em todos os stores. Sem esse argumento, as consultas não são isoladas por tenant, permitindo bancos dedicados.
-  O EF precisa mapear `TenantId` para permitir comparação no banco, por exemplo com um value converter.
-- O overload de `MongoQueryStore` recebe conexão, coleção, sessão e tenant. A sessão deve pertencer à conexão
-  fornecida e continuar válida durante toda a consulta, inclusive durante a enumeração dos eventos.
-- Os event stores rejeitam envelopes de outro tenant quando um tenant é informado.
-- `MongoEventStore.EnsureIndexesAsync` deve ser chamado na inicialização. O índice único por tenant, tipo, agregado
-  e versão pressupõe um evento por versão. Configure a mesma restrição no modelo/migração EF. Se um comando produzir
-  vários eventos, atribua uma versão diferente a cada evento ou desabilite essa unicidade e defina outra chave.
+- Os stores EF recebem apenas o contexto no construtor; `TDataContext` deve herdar de `DbContext` e implementar
+  `IDataContext`.
+- `TenantId` e `IRequireTenantPartition` descrevem o particionamento, mas os stores não aplicam filtros nem validam
+  o tenant dos envelopes automaticamente. Em bancos compartilhados, configure o isolamento na aplicação ou no
+  modelo EF, por exemplo com filtros globais de consulta, e valide o tenant nas gravações.
+- Configure no modelo/migração EF o mapeamento de `EventEnvelopeState`, `TenantId` e `Payload`, além dos índices
+  necessários. Um índice único por tenant, tipo de agregado, id do agregado e versão pressupõe um evento por versão.
+  Se um comando produzir vários eventos, atribua uma versão diferente a cada evento ou defina outra chave única.
 - `AppendAsync` não gera `Sequence`. A aplicação ou o mapeamento do banco deve fornecer uma sequência crescente e
   única no escopo consumido por `LoadFromSequenceAsync`. Um índice único de versão impede duplicatas, mas não valida
   a versão esperada nem impede lacunas; essa validação pertence ao fluxo de gravação e à transação.
-- `LoadFromSequenceAsync` inclui a sequência informada (`>=`); o consumidor deve tratar a repetição do último evento.
+- `EFEventStore.AppendAsync` adiciona o envelope e chama `SaveChangesAsync` imediatamente.
+- `LoadAsync` lê os eventos por tipo e id do agregado, ordenados por versão e depois por sequência.
+- `LoadFromSequenceAsync` inclui a sequência informada (`>=`) e ordena por sequência; o consumidor deve tratar a
+  repetição do último evento.
 - `IStateSnapshot.Version` indica o último evento incorporado; `SnapshotAt` é `DateTimeOffset` somente para leitura
   no contrato. O estado concreto também deve identificar o agregado e, quando aplicável, o tenant.
 
@@ -187,12 +222,15 @@ como no exemplo acima. O encadeamento de `Ensure` interrompe as validações na 
 ### Metadados e campos customizados
 
 - `FieldMetadata<TState>` e `IStateMetadata<TState>` para descrever campos de um estado.
-- `FieldType` para tipos comuns de campo: texto, inteiro, decimal, booleano, data, seleção única e múltipla.
+- `FieldType` para tipos comuns de campo: identificador, texto, inteiro, decimal, booleano, data, data/hora,
+  seleção única e múltipla.
 - `CustomFieldMetadata`, `FieldId`, `IHaveCustomData` e `CustomData` para cenários com campos customizados por tenant e
   entidade.
 - `MetadataModule.Field(...)` para criar metadados de campo de forma concisa.
+- `IHaveCustomData.CustomData` expõe uma coleção `ImmutableArray<CustomData>`; cada entrada associa `FieldId` a um
+  valor textual.
 
 ## Quando usar
 
-Use `Funca.Abstractions` para separar regras de negócio puras de detalhes de infraestrutura, deixando erros, ausência de
-valor, consultas, eventos, mensagens e contexto de requisição com contratos pequenos e consistentes.
+Use `Funca.Abstractions` para separar regras de negócio puras de detalhes de infraestrutura, deixando resultados,
+consultas, agregados, eventos, mensagens e contexto de requisição com contratos pequenos e consistentes.

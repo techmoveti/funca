@@ -6,13 +6,13 @@ public static class ResultModule
         => new(value);
 
     public static ErrorCollection Fail(string errorMessage)
-        => new([Error.Invalid(errorMessage)]);
+        => new(Error.Invalid(errorMessage));
 
     public static ErrorCollection Fail(Error error)
-        => new([error]);
+        => new(error);
 
     public static ErrorCollection Fail(Error[] error)
-        => new([.. error]);
+        => new(error);
 
     public static Result<T> Of<T>(T value)
         => new(new Success<T>(value));

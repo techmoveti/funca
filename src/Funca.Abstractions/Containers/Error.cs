@@ -2,8 +2,22 @@
 
 public readonly record struct Error(string? Key, ErrorType Type, string Message)
 {
-    public static readonly Error Empty = new(string.Empty, ErrorType.Failure, string.Empty);
-    public bool IsEmpty() => Equals(Empty);
+    public string Message
+    {
+        get => field ?? string.Empty;
+        init => field = value;
+    } = Message;
+
+    public static readonly Error Empty = default;
+
+    public bool IsEmpty()
+        => Type == ErrorType.Failure && string.IsNullOrEmpty(Key) && Message.Length == 0;
+
+    public bool Equals(Error other)
+        => Key == other.Key && Type == other.Type && Message == other.Message;
+
+    public override int GetHashCode()
+        => HashCode.Combine(Key, Type, Message);
 
     public static Error Create(string message) => new(null, ErrorType.Failure, message);
     public static Error Create(ErrorType type, string message) => new(null, type, message);

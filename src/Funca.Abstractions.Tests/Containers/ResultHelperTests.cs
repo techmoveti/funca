@@ -5,6 +5,57 @@ namespace Funca.Abstractions.Tests.Containers;
 public sealed class ResultHelperTests
 {
     [Fact]
+    public void Unwrap_returns_the_success_value_for_a_value_type()
+    {
+        Assert.Equal(42, Result<int>.Ok(42).Unwrap());
+    }
+
+    [Fact]
+    public void Unwrap_preserves_the_success_reference()
+    {
+        var value = new object();
+
+        Assert.Same(value, Result<object>.Ok(value).Unwrap());
+        Assert.Equal("success", Result<string>.Ok("success").Unwrap());
+    }
+
+    [Fact]
+    public void Unwrap_preserves_nullable_success_values()
+    {
+        Assert.Null(Result<string?>.Ok(null).Unwrap());
+        Assert.Null(Result<int?>.Ok(null).Unwrap());
+        Assert.Equal(42, Result<int?>.Ok(42).Unwrap());
+    }
+
+    [Fact]
+    public void Unwrap_returns_an_error_collection_payload_wrapped_as_success()
+    {
+        var payload = new ErrorCollection([Error.Invalid("payload")]);
+
+        Assert.Equal(payload, Result<ErrorCollection>.Ok(payload).Unwrap());
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Unwrap_rejects_failures_including_empty_error_collections(bool emptyErrors)
+    {
+        var errors = emptyErrors ? default(ErrorCollection) : new ErrorCollection([Error.Invalid("failure")]);
+
+        var exception = Assert.Throws<InvalidOperationException>(() => Result<int>.Fail(errors).Unwrap());
+
+        Assert.Equal("Cannot unwrap a failed result.", exception.Message);
+    }
+
+    [Fact]
+    public void Unwrap_rejects_an_uninitialized_result()
+    {
+        var exception = Assert.Throws<InvalidOperationException>(() => default(Result<int>).Unwrap());
+
+        Assert.Equal("The result must be initialized.", exception.Message);
+    }
+
+    [Fact]
     public void Match_handles_a_nullable_success_without_running_the_failure_handler()
     {
         var calls = 0;
