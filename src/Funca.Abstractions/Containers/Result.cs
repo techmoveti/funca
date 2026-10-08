@@ -40,7 +40,7 @@ public readonly struct Result<T> : IUnion
         return _case == SuccessCase;
     }
 
-    public bool IsError(out ErrorCollection value)
+    public bool IsFail(out ErrorCollection value)
     {
         value = _errors;
 
