@@ -5,13 +5,12 @@ namespace Funca.Abstractions.Metadata;
 public readonly record struct FieldId(Guid Value);
 
 /// <summary>
-/// Represents the metadata for a custom field associated with a specific entity.
-/// This class provides detailed information about a custom field, including its
-/// identifier, name, type, and configuration properties such as required status and activation state.
+///     Represents the metadata for a custom field associated with a specific entity.
+///     This class provides detailed information about a custom field, including its
+///     identifier, name, type, and configuration properties such as required status and activation state.
 /// </summary>
 public sealed record CustomFieldMetadata : IRequireTenantPartition
 {
-    public required TenantId TenantId { get; init; }
     public required FieldId Id { get; init; }
     public required string EntityName { get; init; }
     public required string Code { get; init; }
@@ -23,4 +22,5 @@ public sealed record CustomFieldMetadata : IRequireTenantPartition
     public string? DefaultValue { get; init; }
     public bool Required { get; init; }
     public bool Active { get; init; } = true;
+    public required TenantId TenantId { get; init; }
 }

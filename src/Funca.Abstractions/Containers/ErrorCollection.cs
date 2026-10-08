@@ -4,15 +4,9 @@ namespace Funca.Abstractions.Containers;
 
 public readonly record struct ErrorCollection
 {
-    public ErrorCollection(Error error)
-    {
-        Errors = ImmutableArray.Create(error);
-    }
+    public ErrorCollection(Error error) => Errors = ImmutableArray.Create(error);
 
-    public ErrorCollection(ImmutableArray<Error> errors)
-    {
-        Errors = errors;
-    }
+    public ErrorCollection(ImmutableArray<Error> errors) => Errors = errors;
 
     public ErrorCollection(IEnumerable<Error> Errors)
     {
@@ -21,6 +15,14 @@ public readonly record struct ErrorCollection
     }
 
     public ImmutableArray<Error> Errors => field.IsDefault ? [] : field;
+
+    public bool Equals(ErrorCollection other)
+    {
+        var left = Errors;
+        var right = other.Errors;
+
+        return left == right || left.AsSpan().SequenceEqual(right.AsSpan());
+    }
 
     public ErrorCollection Combine(ErrorCollection other)
     {
@@ -33,14 +35,6 @@ public readonly record struct ErrorCollection
             return this;
 
         return new ErrorCollection(left.AddRange(right));
-    }
-
-    public bool Equals(ErrorCollection other)
-    {
-        var left = Errors;
-        var right = other.Errors;
-
-        return left == right || left.AsSpan().SequenceEqual(right.AsSpan());
     }
 
     public override int GetHashCode()

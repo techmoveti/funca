@@ -4,7 +4,14 @@ namespace Funca.Abstractions.Shell;
 
 public sealed class RequestContext
 {
+    private readonly Lazy<Dictionary<string, object>> _attachments =
+        new(() => new Dictionary<string, object>());
+
     public string CorrelationId { get; private set; } = Guid.NewGuid().ToString();
+
+    public UserContext? UserContext { get; private set; }
+
+    public TenantId? TenantId { get; private set; }
 
     public RequestContext SetCorrelationId(string correlationId)
     {
@@ -13,8 +20,6 @@ public sealed class RequestContext
         return this;
     }
 
-    public UserContext? UserContext { get; private set; }
-
     public RequestContext SetUserContext(UserContext userContext)
     {
         UserContext = userContext;
@@ -22,16 +27,11 @@ public sealed class RequestContext
         return this;
     }
 
-    public TenantId? TenantId { get; private set; }
-
     public void SetTenant(TenantId tenantId)
         => TenantId = tenantId;
 
     public TenantId GetTenant()
         => TenantId ?? throw new InvalidOperationException("Tenant must be set!");
-
-    private readonly Lazy<Dictionary<string, object>> _attachments =
-        new(() => new Dictionary<string, object>());
 
     public void Attach<T>(string accessKey, T valueOfT) where T : class
     {

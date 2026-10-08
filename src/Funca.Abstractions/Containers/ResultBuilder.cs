@@ -10,7 +10,7 @@ public readonly struct ResultBuilder
         if (!result.HasValue)
             throw new ArgumentException("The result must be initialized.", nameof(result));
 
-        return new(result);
+        return new ResultBuilder<T>(result);
     }
 }
 

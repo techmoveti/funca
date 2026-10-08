@@ -3,18 +3,10 @@ namespace Funca.Abstractions.Data;
 public abstract class AggregateEventBase<TState>(TState state) : IAggregateEvent<TState>
     where TState : IState
 {
-    public TState Snapshot => State;
-
-    public TState State { get; protected set; } = state;
-
     private readonly List<IEvent> _uncommittedEvents = [];
 
-    protected void Emit(IEvent @event)
-    {
-        Apply(@event);
-
-        _uncommittedEvents.Add(@event);
-    }
+    public TState State { get; protected set; } = state;
+    public TState Snapshot => State;
 
     public IEnumerable<IEvent> GetUncommittedEvents()
         => [.. _uncommittedEvents];
@@ -26,6 +18,13 @@ public abstract class AggregateEventBase<TState>(TState state) : IAggregateEvent
     {
         foreach (var @event in events)
             Apply(@event);
+    }
+
+    protected void Emit(IEvent @event)
+    {
+        Apply(@event);
+
+        _uncommittedEvents.Add(@event);
     }
 
     protected abstract void Apply(IEvent @event);

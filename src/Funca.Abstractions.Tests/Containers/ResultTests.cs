@@ -9,7 +9,7 @@ public sealed class ResultTests
     {
         List<string> calls = [];
 
-        Result<string> result = Result<int>.Of(42)
+        var result = Result<int>.Of(42)
             .Ensure(value => value > 0, Error.Invalid("number", "Must be positive"))
             .Bind(value =>
             {
@@ -48,7 +48,7 @@ public sealed class ResultTests
     [InlineData(false)]
     public void Bind_preserves_existing_failures_without_running_the_binder(bool emptyErrors)
     {
-        var errors = emptyErrors ? default(ErrorCollection) : new ErrorCollection([Error.Invalid("existing")]);
+        var errors = emptyErrors ? default : new ErrorCollection([Error.Invalid("existing")]);
 
         var result = Result<int>.Fail(errors).Bind<string>(_ => throw new InvalidOperationException());
 
@@ -131,7 +131,7 @@ public sealed class ResultTests
     public void Generic_combine_supports_nullable_inputs_and_output()
     {
         var result = Result<string?>.Of(null).Combine(Result<int?>.Of(null), (text, number) =>
-            text is null && number is null ? (string?)null : "unexpected");
+            text is null && number is null ? null : "unexpected");
 
         Assert.Null(Assert.IsType<Success<string?>>(result.Value).Value);
     }
@@ -167,7 +167,7 @@ public sealed class ResultTests
     {
         var calls = 0;
 
-        Result<string> result = Result<int>.Of(42)
+        var result = Result<int>.Of(42)
             .Ensure(value => value > 0)
             .Ensure(value => value < 100)
             .Combine(Result<int>.Of(99))
@@ -296,7 +296,7 @@ public sealed class ResultTests
     public void Ensure_preserves_existing_failures_without_evaluating_the_predicate(bool emptyErrors)
     {
         var errors = emptyErrors
-            ? default(ErrorCollection)
+            ? default
             : new ErrorCollection([Error.Invalid("first"), Error.NotFound("second")]);
 
         var result = Result<int>.Fail(errors).Ensure(_ => throw new InvalidOperationException());

@@ -33,14 +33,14 @@ public readonly struct Result<T> : IUnion
 
     public bool HasValue => _case != 0;
 
-    public bool TryGetValue(out Success<T> value)
+    public bool IsOk(out Success<T> value)
     {
         value = _success;
 
         return _case == SuccessCase;
     }
 
-    public bool TryGetValue(out ErrorCollection value)
+    public bool IsError(out ErrorCollection value)
     {
         value = _errors;
 
@@ -77,9 +77,6 @@ public readonly struct Result<T> : IUnion
             _ => left
         };
     }
-
-    public bool IsOk
-        => _case == SuccessCase;
 
     public T Unwrap() => _case switch
     {

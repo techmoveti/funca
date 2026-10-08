@@ -40,7 +40,7 @@ public sealed class ResultHelperTests
     [InlineData(false)]
     public void Unwrap_rejects_failures_including_empty_error_collections(bool emptyErrors)
     {
-        var errors = emptyErrors ? default(ErrorCollection) : new ErrorCollection([Error.Invalid("failure")]);
+        var errors = emptyErrors ? default : new ErrorCollection([Error.Invalid("failure")]);
 
         var exception = Assert.Throws<InvalidOperationException>(() => Result<int>.Fail(errors).Unwrap());
 
@@ -78,11 +78,11 @@ public sealed class ResultHelperTests
     public void Match_handles_failures_without_running_the_success_handler(bool emptyErrors)
     {
         var errors = emptyErrors
-            ? default(ErrorCollection)
+            ? default
             : new ErrorCollection([Error.Invalid("first"), Error.NotFound("second")]);
         var calls = 0;
 
-        var output = Result<int>.Fail(errors).Match<ErrorCollection>(
+        var output = Result<int>.Fail(errors).Match(
             _ => throw new Exception("The success handler must not run."),
             actual =>
             {
@@ -127,7 +127,7 @@ public sealed class ResultHelperTests
     [InlineData(false)]
     public void Tap_preserves_failures_without_running_the_action(bool emptyErrors)
     {
-        var errors = emptyErrors ? default(ErrorCollection) : new ErrorCollection([Error.Invalid("existing")]);
+        var errors = emptyErrors ? default : new ErrorCollection([Error.Invalid("existing")]);
 
         var result = Result<int>.Fail(errors).Tap(_ => throw new Exception("The action must not run."));
 
@@ -150,7 +150,7 @@ public sealed class ResultHelperTests
     public void Recover_receives_errors_once_and_can_return_a_nullable_success(bool emptyErrors)
     {
         var errors = emptyErrors
-            ? default(ErrorCollection)
+            ? default
             : new ErrorCollection([Error.Invalid("first"), Error.NotFound("second")]);
         var calls = 0;
 
@@ -190,7 +190,7 @@ public sealed class ResultHelperTests
         var failure = Result<int>.Fail(Error.Invalid("failure"));
 
         Assert.Equal("onSuccess",
-            Assert.Throws<ArgumentNullException>(() => failure.Match<int>(null!, _ => 0)).ParamName);
+            Assert.Throws<ArgumentNullException>(() => failure.Match(null!, _ => 0)).ParamName);
         Assert.Equal("onFailure",
             Assert.Throws<ArgumentNullException>(() => success.Match(value => value, null!)).ParamName);
         Assert.Equal("action", Assert.Throws<ArgumentNullException>(() => failure.Tap(null!)).ParamName);
@@ -218,8 +218,8 @@ public sealed class ResultHelperTests
         var success = Result<int>.Of(42);
         var failure = Result<int>.Fail(Error.Invalid("failure"));
 
-        Assert.Same(exception, Assert.Throws<FormatException>(() => success.Match<int>(_ => throw exception, _ => 0)));
-        Assert.Same(exception, Assert.Throws<FormatException>(() => failure.Match<int>(_ => 0, _ => throw exception)));
+        Assert.Same(exception, Assert.Throws<FormatException>(() => success.Match(_ => throw exception, _ => 0)));
+        Assert.Same(exception, Assert.Throws<FormatException>(() => failure.Match(_ => 0, _ => throw exception)));
         Assert.Same(exception, Assert.Throws<FormatException>(() => success.Tap(_ => throw exception)));
         Assert.Same(exception, Assert.Throws<FormatException>(() => failure.Recover(_ => throw exception)));
     }

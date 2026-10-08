@@ -23,7 +23,7 @@ public sealed class ErrorTests
     {
         var empty = new Error(null, ErrorType.Failure, string.Empty);
 
-        Assert.True(empty == default(Error));
+        Assert.True(empty == default);
         Assert.True(empty.Equals((object)Error.Empty));
         Assert.Equal(empty.GetHashCode(), Error.Empty.GetHashCode());
         Assert.Single(new HashSet<Error> { empty, Error.Empty });
@@ -55,7 +55,7 @@ public sealed class ErrorTests
     public void Message_normalization_applies_to_construction_and_with_expressions()
     {
         var constructed = new Error(null, ErrorType.Failure, null!);
-        var changed = Error.Failure("failure") with { Message = null! };
+        var changed = Error.Failure() with { Message = null! };
 
         Assert.Equal(string.Empty, constructed.Message);
         Assert.Equal(string.Empty, changed.Message);

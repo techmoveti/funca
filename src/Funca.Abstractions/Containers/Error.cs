@@ -2,19 +2,19 @@
 
 public readonly record struct Error(string? Key, ErrorType Type, string Message)
 {
+    public static readonly Error Empty = default;
+
     public string Message
     {
         get => field ?? string.Empty;
         init => field = value;
     } = Message;
 
-    public static readonly Error Empty = default;
+    public bool Equals(Error other)
+        => Key == other.Key && Type == other.Type && Message == other.Message;
 
     public bool IsEmpty()
         => Type == ErrorType.Failure && string.IsNullOrEmpty(Key) && Message.Length == 0;
-
-    public bool Equals(Error other)
-        => Key == other.Key && Type == other.Type && Message == other.Message;
 
     public override int GetHashCode()
         => HashCode.Combine(Key, Type, Message);
