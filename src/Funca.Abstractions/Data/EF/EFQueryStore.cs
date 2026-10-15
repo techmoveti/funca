@@ -1,4 +1,4 @@
-﻿namespace Funca.Abstractions.Data.EF;
+namespace Funca.Abstractions.Data.EF;
 
 public class EFQueryStore<TDataContext, TState, TKey>(TDataContext dataContext) : IQueryStore<TState, TKey>
     where TDataContext : DbContext, IDataContext
@@ -7,7 +7,8 @@ public class EFQueryStore<TDataContext, TState, TKey>(TDataContext dataContext) 
 {
     protected readonly DbContext DataContext = dataContext;
 
-    private IQueryable<TState> States
+    /// <summary>Override to query a projection or apply application-specific filters.</summary>
+    protected virtual IQueryable<TState> States
         => DataContext.Set<TState>().AsNoTracking();
 
     public async Task<TState?> GetAsync(TKey id, CancellationToken token)

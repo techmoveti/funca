@@ -209,6 +209,11 @@ aceitando chave vazia. A igualdade e o hash de `Error` usam os valores expostos 
 
 ### Configuração dos stores
 
+- `EFQueryStore.States` é `protected virtual`. Sobrescreva essa propriedade para consultar projeções não mapeadas
+  ou aplicar filtros da aplicação. Todas as operações do store utilizam essa origem; o padrão permanece
+  `DataContext.Set<TState>().AsNoTracking()`. Ao sobrescrever, preserve o isolamento por tenant e o uso de
+  `AsNoTracking()` nas entidades de origem.
+
 - `EFQueryStore` e as leituras de `EFEventStore` não rastreiam entidades. Para alterações, use o contexto EF
   diretamente.
 - Na paginação, os stores aplicam `SortBy`/`OrderType` e desempate por `Id`. Sem `SortBy`, preservam a ordenação de
