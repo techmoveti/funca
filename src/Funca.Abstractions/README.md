@@ -18,7 +18,8 @@ dotnet add package Funca.Abstractions
 
 ## Target framework
 
-Este pacote mira `net11.0` e usa recursos preview do .NET/C#.
+Este pacote mira `net11.0`, requer o SDK .NET 11.0.100 ou um patch compatível e usa Entity Framework Core 11.0.0.
+Não é necessário habilitar recursos preview para consumir o pacote.
 
 ## Recursos entregues
 
@@ -80,8 +81,7 @@ indica se o resultado está inicializado; os overloads de `TryGetValue` extraem 
 sem boxing. A propriedade `Value` retorna o caso como `object?` e faz boxing a cada acesso a um resultado
 inicializado; prefira `result switch`, `Unwrap()` ou `TryGetValue`. Converter o próprio resultado para `object`
 ou uma interface também causa boxing. A criação e combinação de coleções de erros ainda podem alocar memória.
-No compilador .NET 11 RC, a captura de casos por pattern matching pode ser limitada em código genérico;
-nesses cenários, use os overloads tipados de `TryGetValue` ou `Match`.
+Em código genérico, os overloads tipados de `TryGetValue` ou `Match` também permitem consumir os casos.
 
 `ResultModule` também oferece helpers estáticos: `Ok<T>` retorna `Success<T>`, `Of<T>` retorna `Result<T>` e
 `Fail` retorna `ErrorCollection`, aceitando mensagem, um erro ou um array de erros. `Fail(string)` cria um erro
